@@ -69,7 +69,7 @@ const tooltipStyle = computed(() => {
     return null
   }
   const rect = el.getBoundingClientRect()
-  return { left: `${rect.left + a.x}px`, top: `${rect.top + a.y}px` }
+  return { left: `${rect.left + a.x}px`, top: `${rect.top}px` }
 })
 
 function onMove(event: PointerEvent) {
