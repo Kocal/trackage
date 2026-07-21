@@ -1,25 +1,30 @@
-export interface PackagistStats {
-  total: number
-  last30: number
-  lastDay: number
-  stars: number
-}
-
-export function parsePackagist(json: unknown): PackagistStats {
-  const pkg = (json as { package?: { downloads?: Record<string, number>, favers?: number } }).package
-  const downloads = pkg?.downloads ?? {}
-  return {
-    total: downloads.total ?? 0,
-    last30: downloads.monthly ?? 0,
-    lastDay: downloads.daily ?? 0,
-    stars: pkg?.favers ?? 0
-  }
-}
-
-export async function fetchPackagist(name: string, fetchFn: typeof fetch = fetch): Promise<PackagistStats> {
+export async function fetchPackagistTotal(name: string, fetchFn: typeof fetch = fetch): Promise<{ total: number }> {
   const res = await fetchFn(`https://packagist.org/packages/${name}.json`)
   if (!res.ok) {
-    throw new Error(`packagist ${name} -> ${res.status}`)
+    throw new Error(`packagist ${name} -> ${(res as Response).status}`)
   }
-  return parsePackagist(await res.json())
+  const json = await res.json() as { package?: { downloads?: { total?: number } } }
+  return { total: json.package?.downloads?.total ?? 0 }
+}
+
+export function parsePackagistDaily(json: unknown, name: string): Record<string, number> {
+  const data = json as { labels?: string[], values?: Record<string, number[]> }
+  const labels = data.labels ?? []
+  const values = data.values?.[name] ?? []
+  const map: Record<string, number> = {}
+  labels.forEach((date, i) => {
+    const v = values[i]
+    if (typeof v === 'number' && v > 0) {
+      map[date] = v
+    }
+  })
+  return map
+}
+
+export async function fetchPackagistDaily(name: string, from: string, fetchFn: typeof fetch = fetch): Promise<Record<string, number>> {
+  const res = await fetchFn(`https://packagist.org/packages/${name}/stats/all.json?average=daily&from=${from}`)
+  if (!res.ok) {
+    throw new Error(`packagist daily ${name} -> ${(res as Response).status}`)
+  }
+  return parsePackagistDaily(await res.json(), name)
 }
