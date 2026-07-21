@@ -1,0 +1,212 @@
+{
+  "generatedAt": "2026-07-21T13:41:33.914Z",
+  "packages": {
+    "npm:@symfony/webpack-encore": [
+      {
+        "date": "2026-07-21",
+        "total": 52697923,
+        "last30": 861903,
+        "lastDay": 38362,
+        "stars": 2223
+      }
+    ],
+    "packagist:symfony/webpack-encore-bundle": [
+      {
+        "date": "2026-07-21",
+        "total": 67994939,
+        "last30": 1334253,
+        "lastDay": 61190,
+        "stars": 947
+      }
+    ],
+    "npm:@symfony/reprise": [
+      {
+        "date": "2026-07-21",
+        "total": 466,
+        "last30": 466,
+        "lastDay": 2,
+        "stars": 37
+      }
+    ],
+    "packagist:symfony/reprise": [
+      {
+        "date": "2026-07-21",
+        "total": 99,
+        "last30": 99,
+        "lastDay": 5,
+        "stars": 37
+      }
+    ],
+    "packagist:symfony/ux-vue": [
+      {
+        "date": "2026-07-21",
+        "total": 985495,
+        "last30": 40673,
+        "lastDay": 2295,
+        "stars": 1066
+      }
+    ],
+    "npm:@symfony/ux-vue": [
+      {
+        "date": "2026-07-21",
+        "total": 18650,
+        "last30": 1687,
+        "lastDay": 71,
+        "stars": 1066
+      }
+    ],
+    "packagist:symfony/ux-translator": [
+      {
+        "date": "2026-07-21",
+        "total": 764584,
+        "last30": 44082,
+        "lastDay": 2286,
+        "stars": 1066
+      }
+    ],
+    "npm:@symfony/ux-translator": [
+      {
+        "date": "2026-07-21",
+        "total": 12298,
+        "last30": 2171,
+        "lastDay": 61,
+        "stars": 1066
+      }
+    ],
+    "packagist:symfony/ux-toolkit": [
+      {
+        "date": "2026-07-21",
+        "total": 151006,
+        "last30": 41234,
+        "lastDay": 1902,
+        "stars": 1066
+      }
+    ],
+    "packagist:symfony/ux-react": [
+      {
+        "date": "2026-07-21",
+        "total": 1679835,
+        "last30": 65442,
+        "lastDay": 3057,
+        "stars": 1066
+      }
+    ],
+    "packagist:symfony/ux-native": [
+      {
+        "date": "2026-07-21",
+        "total": 11542,
+        "last30": 4274,
+        "lastDay": 48,
+        "stars": 1066
+      }
+    ],
+    "packagist:symfony/ux-leaflet-map": [
+      {
+        "date": "2026-07-21",
+        "total": 201867,
+        "last30": 16264,
+        "lastDay": 547,
+        "stars": 1066
+      }
+    ],
+    "packagist:symfony/ux-google-map": [
+      {
+        "date": "2026-07-21",
+        "total": 52931,
+        "last30": 7386,
+        "lastDay": 246,
+        "stars": 1066
+      }
+    ],
+    "packagist:symfony/ux-map": [
+      {
+        "date": "2026-07-21",
+        "total": 251966,
+        "last30": 22337,
+        "lastDay": 845,
+        "stars": 1066
+      }
+    ],
+    "packagist:symfony/ux-calendar-link": [
+      {
+        "date": "2026-07-21",
+        "total": 2561,
+        "last30": 1273,
+        "lastDay": 49,
+        "stars": 1066
+      }
+    ],
+    "packagist:kocal/phpstan-symfony-ux": [
+      {
+        "date": "2026-07-21",
+        "total": 50410,
+        "last30": 6529,
+        "lastDay": 301,
+        "stars": 28
+      }
+    ],
+    "packagist:kocal/biome-js-bundle": [
+      {
+        "date": "2026-07-21",
+        "total": 201934,
+        "last30": 18894,
+        "lastDay": 658,
+        "stars": 0
+      }
+    ],
+    "packagist:kocal/symfony-mailer-testing": [
+      {
+        "date": "2026-07-21",
+        "total": 269727,
+        "last30": 2162,
+        "lastDay": 202,
+        "stars": 0
+      }
+    ],
+    "packagist:kocal/oxc-bundle": [
+      {
+        "date": "2026-07-21",
+        "total": 287,
+        "last30": 47,
+        "lastDay": 11,
+        "stars": 0
+      }
+    ],
+    "npm:@symfony/ux-react": [
+      {
+        "date": "2026-07-21",
+        "total": 67982,
+        "last30": 5794,
+        "lastDay": 118,
+        "stars": 1066
+      }
+    ],
+    "npm:@symfony/ux-native": [
+      {
+        "date": "2026-07-21",
+        "total": 1255,
+        "last30": 568,
+        "lastDay": 2,
+        "stars": 1066
+      }
+    ],
+    "npm:@symfony/ux-leaflet-map": [
+      {
+        "date": "2026-07-21",
+        "total": 8482,
+        "last30": 2993,
+        "lastDay": 19,
+        "stars": 1066
+      }
+    ],
+    "npm:@symfony/ux-google-map": [
+      {
+        "date": "2026-07-21",
+        "total": 8463,
+        "last30": 1232,
+        "lastDay": 7,
+        "stars": 1066
+      }
+    ]
+  }
+}
