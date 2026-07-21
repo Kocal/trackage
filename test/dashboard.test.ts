@@ -3,7 +3,46 @@ import type { TrackedProject } from '~/data/projects.config'
 import { buildDashboard } from '~/utils/dashboard'
 import type { History } from '~~/shared/stats'
 
+function expectedAxis(latest: string): string[] {
+  const end = new Date(`${latest}T00:00:00Z`)
+  const dates: string[] = []
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(end)
+    d.setUTCDate(d.getUTCDate() - i)
+    dates.push(d.toISOString().slice(0, 10))
+  }
+  return dates
+}
+
 describe('buildDashboard', () => {
+  it('builds a 30-consecutive-day date axis ending at the latest recorded date', () => {
+    const projects: TrackedProject[] = [
+      {
+        name: 'Webpack Encore',
+        packages: [
+          { registry: 'npm', name: '@symfony/webpack-encore', repo: 'symfony/webpack-encore' }
+        ]
+      }
+    ]
+    const history: History = {
+      generatedAt: '2026-07-21T00:00:00Z',
+      packages: {
+        'npm:@symfony/webpack-encore': {
+          total: 100,
+          stars: 10,
+          daily: { '2026-06-01': 1, '2026-07-20': 5 }
+        }
+      }
+    }
+
+    const dashboard = buildDashboard(projects, history)
+
+    expect(dashboard.dates).toEqual(expectedAxis('2026-07-20'))
+    expect(dashboard.dates).toHaveLength(30)
+    expect(dashboard.dates[0]).toBe('2026-06-21')
+    expect(dashboard.dates[29]).toBe('2026-07-20')
+  })
+
   it('combines totals across a project\'s npm+packagist packages', () => {
     const projects: TrackedProject[] = [
       {
@@ -27,7 +66,7 @@ describe('buildDashboard', () => {
     expect(dashboard.projects[0]?.combinedTotal).toBe(300)
   })
 
-  it('derives last30 and sparkline for a single package from its daily map', () => {
+  it('aligns a single package\'s sparkline to the 30-day axis, zero-filling absent days', () => {
     const projects: TrackedProject[] = [
       {
         name: 'Reprise',
@@ -52,8 +91,12 @@ describe('buildDashboard', () => {
 
     expect(pkg?.total).toBe(466)
     expect(pkg?.stars).toBe(37)
+    expect(pkg?.sparkline).toHaveLength(30)
+    expect(pkg?.sparkline?.length).toBe(dashboard.dates.length)
+    // last three entries are the recorded days; everything before is zero-filled
+    expect(pkg?.sparkline?.slice(-3)).toEqual([1, 2, 3])
+    expect(pkg?.sparkline?.slice(0, -3)).toEqual(Array(27).fill(0))
     expect(pkg?.last30).toBe(6)
-    expect(pkg?.sparkline).toEqual([1, 2, 3])
   })
 
   it('sums overlapping dates across packages for combined daily, not concatenates', () => {
@@ -85,8 +128,12 @@ describe('buildDashboard', () => {
     const dashboard = buildDashboard(projects, history)
     const project = dashboard.projects[0]
 
+    expect(dashboard.dates).toHaveLength(30)
+    expect(dashboard.dates[29]).toBe('2026-07-21')
+    expect(project?.sparkline).toHaveLength(30)
+    // last three axis days are 07-19, 07-20, 07-21
+    expect(project?.sparkline?.slice(-3)).toEqual([10, 25, 8])
     expect(project?.combinedLast30).toBe(43)
-    expect(project?.sparkline).toEqual([10, 25, 8])
   })
 
   it('dedupes totalStars by repo when packages share a repo', () => {
@@ -119,7 +166,7 @@ describe('buildDashboard', () => {
     expect(dashboard.totalStars).toBe(51)
   })
 
-  it('yields zeros and an empty sparkline for a package missing from history', () => {
+  it('yields zeros and an empty sparkline for a package missing from history when there is no date axis', () => {
     const projects: TrackedProject[] = [
       {
         name: 'Ghost Package',
@@ -136,6 +183,7 @@ describe('buildDashboard', () => {
     const dashboard = buildDashboard(projects, history)
     const pkg = dashboard.projects[0]?.packages[0]
 
+    expect(dashboard.dates).toEqual([])
     expect(pkg?.total).toBe(0)
     expect(pkg?.stars).toBe(0)
     expect(pkg?.last30).toBe(0)

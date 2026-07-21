@@ -17,7 +17,7 @@ function registryIcon(registry: string) {
         <h3 class="font-semibold truncate">
           {{ project.name }}
         </h3>
-        <Sparkline :data="project.sparkline" />
+        <Sparkline :values="project.sparkline" />
       </div>
     </template>
 
