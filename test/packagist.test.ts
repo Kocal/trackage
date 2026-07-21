@@ -25,4 +25,9 @@ describe('fetchPackagist', () => {
     await fetchPackagist('symfony/webpack-encore-bundle', fetchFn)
     expect(fetchFn).toHaveBeenCalledWith('https://packagist.org/packages/symfony/webpack-encore-bundle.json')
   })
+
+  it('throws on a non-ok response', async () => {
+    const fetchFn = vi.fn(async () => ({ ok: false, status: 404 })) as unknown as typeof fetch
+    await expect(fetchPackagist('does/not-exist', fetchFn)).rejects.toThrow()
+  })
 })
