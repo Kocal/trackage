@@ -1,64 +1,39 @@
-# Nuxt Starter Template
+# trackage
 
-[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
+A personal dashboard that shows download and star stats for my npm and Packagist packages in one place.
 
-Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
+It's a single static page with one tile per project. Projects that ship a linked PHP (Packagist) + JS (npm) package are grouped into one tile with a combined headline. Each tile shows total downloads, downloads over the last 30 days, GitHub stars, and a 30-day sparkline. Hovering any sparkline shows a synchronized crosshair and tooltip across every chart.
 
-- [Live demo](https://starter-template.nuxt.dev/)
-- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+## Stack
 
-<a href="https://starter-template.nuxt.dev/" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png" width="830" height="466">
-  </picture>
-</a>
+Nuxt 4 + Nuxt UI v4 + Tailwind 4, TypeScript, pnpm. Deployed on Cloudflare Pages as a fully static (SSG) site.
 
-> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
+## How the data works
 
-## Quick Start
+`scripts/fetch-stats.ts` fetches the full day-by-day download history (npm via the `/downloads/range` API, Packagist via its daily stats endpoint) plus GitHub stars, and writes `data/history.json`.
 
-```bash [Terminal]
-npm create nuxt@latest -- -t ui
-```
+A daily GitHub Action (`.github/workflows/update-stats.yml`) runs it in incremental mode (last ~35 days) and commits the updated JSON. That push triggers a Cloudflare Pages rebuild.
 
-## Deploy your own
+The app imports the committed JSON at build time and computes totals, last-30-days, and sparklines in the browser-facing view-model. The raw ~500KB daily history is code-split out so it never ships to the client -> the page payload is ~12KB.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
+## Commands
 
-## Setup
+- `pnpm install` - install deps
+- `pnpm dev` - dev server at http://localhost:3000
+- `pnpm test` - run the vitest unit tests
+- `pnpm lint` / `pnpm typecheck` - the CI gates
+- `pnpm stats` - fetch the last ~35 days and update `data/history.json` (needs `GITHUB_TOKEN` in the env for GitHub stars; the daily Action provides it)
+- `BACKFILL=1 pnpm stats` - one-off full re-seed of all-time daily history (npm from 2015, Packagist from 2012)
+- `pnpm build` - production build (Cloudflare Pages output in `dist/`)
 
-Make sure to install the dependencies:
+## Tracking a package
 
-```bash
-pnpm install
-```
+Edit `app/data/projects.config.ts`. Each project lists its packages as `{ registry: 'npm' | 'packagist', name, repo }`, where `repo` is the `owner/name` of the GitHub repo whose stars to show.
 
-## Development Server
+Symfony UX packages each use their own split repo (e.g. `symfony/ux-vue`), not the `symfony/ux` monorepo.
 
-Start the development server on `http://localhost:3000`:
+## Setup (owner-only, one time)
 
-```bash
-pnpm dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-pnpm build
-```
-
-Locally preview production build:
-
-```bash
-pnpm preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
-
-## Renovate integration
-
-Install [Renovate GitHub app](https://github.com/apps/renovate/installations/select_target) on your repository and you are good to go.
+1. Add the GitHub remote and push: `git remote add origin git@github.com:kocal/trackage.git` then `git push -u origin main`.
+2. In the Cloudflare dashboard: Pages -> connect the GitHub repo, framework preset **Nuxt**, build command `pnpm build`, output directory `dist`. It then auto-deploys on every push to `main`.
+3. In the GitHub repo: Settings -> Actions -> General -> Workflow permissions -> **Read and write**, so the daily cron can commit and push `data/history.json`.
