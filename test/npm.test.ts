@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { aggregate, chunkRanges, fetchNpmDays } from '../scripts/lib/npm'
+import { chunkRanges, dailyMap, fetchNpmDays } from '../scripts/lib/npm'
 
 describe('chunkRanges', () => {
   it('splits into <=size-day windows covering the whole span', () => {
@@ -22,31 +22,65 @@ describe('chunkRanges', () => {
   })
 })
 
-describe('aggregate', () => {
-  it('computes total, last30 and lastDay', () => {
-    const days = Array.from({ length: 40 }, (_, i) => ({
-      day: `2026-06-${String(i + 1).padStart(2, '0')}`,
-      downloads: i + 1
-    }))
-    const out = aggregate(days)
-    expect(out.total).toBe(820)
-    expect(out.lastDay).toBe(40)
-    expect(out.last30).toBe(Array.from({ length: 30 }, (_, i) => i + 11).reduce((a, b) => a + b, 0))
+describe('fetchNpmDays', () => {
+  it('merges downloads across chunks, fetching different data per chunk', async () => {
+    const fetchFn = vi.fn(async (url: string) => {
+      const [, range] = url.match(/range\/([^/]+)\//) ?? []
+      const [chunkStart] = (range ?? '').split(':')
+      return {
+        ok: true,
+        json: async () => ({ downloads: [{ day: chunkStart, downloads: chunkStart === '2015-01-10' ? 5 : 7 }] })
+      }
+    }) as unknown as typeof fetch
+
+    const days = await fetchNpmDays('@symfony/ux-vue', '2015-01-10', '2016-06-01', fetchFn, { delayMs: 0, sleep: async () => {} })
+
+    expect(days.length).toBeGreaterThan(1)
+    expect(days.some(d => d.downloads === 5)).toBe(true)
+    expect(days.some(d => d.downloads === 7)).toBe(true)
   })
 
-  it('is safe on empty input', () => {
-    expect(aggregate([])).toEqual({ total: 0, last30: 0, lastDay: 0 })
+  it('stops and returns what it has on a 404', async () => {
+    const fetchFn = vi.fn(async () => ({ ok: false, status: 404 })) as unknown as typeof fetch
+    const days = await fetchNpmDays('@symfony/ux-vue', '2015-01-10', '2015-06-01', fetchFn, { delayMs: 0, sleep: async () => {} })
+    expect(days).toEqual([])
+  })
+
+  it('retries on 429 with backoff then succeeds', async () => {
+    let calls = 0
+    const fetchFn = vi.fn(async () => {
+      calls++
+      if (calls === 1) {
+        return { ok: false, status: 429 }
+      }
+      return { ok: true, json: async () => ({ downloads: [{ day: '2015-01-10', downloads: 9 }] }) }
+    }) as unknown as typeof fetch
+
+    const days = await fetchNpmDays('@symfony/ux-vue', '2015-01-10', '2015-01-10', fetchFn, { delayMs: 0, sleep: async () => {} })
+
+    expect(calls).toBe(2)
+    expect(days).toEqual([{ day: '2015-01-10', downloads: 9 }])
+  })
+
+  it('throws on a non-ok, non-404, non-429 response', async () => {
+    const fetchFn = vi.fn(async () => ({ ok: false, status: 500 })) as unknown as typeof fetch
+    await expect(
+      fetchNpmDays('@symfony/ux-vue', '2015-01-10', '2015-01-10', fetchFn, { delayMs: 0, sleep: async () => {} })
+    ).rejects.toThrow()
   })
 })
 
-describe('fetchNpmDays', () => {
-  it('merges downloads across chunks', async () => {
-    const fetchFn = vi.fn(async () => ({
-      ok: true,
-      json: async () => ({ downloads: [{ day: '2026-06-01', downloads: 5 }] })
-    })) as unknown as typeof fetch
-    const days = await fetchNpmDays('@symfony/ux-vue', '2015-06-01', fetchFn)
-    expect(days.length).toBeGreaterThan(0)
-    expect(days[0].downloads).toBe(5)
+describe('dailyMap', () => {
+  it('maps day to downloads, skipping non-positive values', () => {
+    const map = dailyMap([
+      { day: '2026-07-19', downloads: 3 },
+      { day: '2026-07-20', downloads: 0 },
+      { day: '2026-07-21', downloads: 4 }
+    ])
+    expect(map).toEqual({ '2026-07-19': 3, '2026-07-21': 4 })
+  })
+
+  it('is safe on empty input', () => {
+    expect(dailyMap([])).toEqual({})
   })
 })

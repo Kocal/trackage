@@ -3,7 +3,11 @@ export interface NpmDay {
   downloads: number
 }
 
-const NPM_EPOCH = '2015-01-10'
+export interface NpmFetchOptions {
+  delayMs?: number
+  maxRetries?: number
+  sleep?: (ms: number) => Promise<void>
+}
 
 function iso(d: Date): string {
   return d.toISOString().slice(0, 10)
@@ -24,27 +28,45 @@ export function chunkRanges(start: string, end: string, size = 500): Array<[stri
   return ranges
 }
 
-export function aggregate(days: NpmDay[]): { total: number, last30: number, lastDay: number } {
-  const sorted = [...days].sort((a, b) => a.day.localeCompare(b.day))
-  const total = sorted.reduce((sum, d) => sum + d.downloads, 0)
-  const last30 = sorted.slice(-30).reduce((sum, d) => sum + d.downloads, 0)
-  const lastDay = sorted.length ? sorted[sorted.length - 1].downloads : 0
-  return { total, last30, lastDay }
-}
+const defaultSleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))
 
-export async function fetchNpmDays(pkg: string, end: string, fetchFn: typeof fetch = fetch): Promise<NpmDay[]> {
+export async function fetchNpmDays(pkg: string, start: string, end: string, fetchFn: typeof fetch = fetch, opts: NpmFetchOptions = {}): Promise<NpmDay[]> {
+  const delayMs = opts.delayMs ?? 300
+  const maxRetries = opts.maxRetries ?? 4
+  const sleep = opts.sleep ?? defaultSleep
   const out: NpmDay[] = []
-  for (const [start, chunkEnd] of chunkRanges(NPM_EPOCH, end)) {
-    const url = `https://api.npmjs.org/downloads/range/${start}:${chunkEnd}/${pkg}`
-    const res = await fetchFn(url)
-    if (!res.ok) {
-      if (res.status === 404) break
-      throw new Error(`npm ${pkg} ${start}:${chunkEnd} -> ${res.status}`)
+  for (const [chunkStart, chunkEnd] of chunkRanges(start, end)) {
+    let attempt = 0
+    for (;;) {
+      const res = await fetchFn(`https://api.npmjs.org/downloads/range/${chunkStart}:${chunkEnd}/${pkg}`)
+      if (res.ok) {
+        const json = await res.json() as { downloads?: NpmDay[] }
+        for (const d of json.downloads ?? []) {
+          if (d.downloads > 0) out.push(d)
+        }
+        break
+      }
+      if ((res as Response).status === 404) {
+        return out
+      }
+      if ((res as Response).status === 429 && attempt < maxRetries) {
+        attempt++
+        await sleep(delayMs * 2 ** attempt)
+        continue
+      }
+      throw new Error(`npm ${pkg} ${chunkStart}:${chunkEnd} -> ${(res as Response).status}`)
     }
-    const json = await res.json() as { downloads?: NpmDay[] }
-    for (const d of json.downloads ?? []) {
-      if (d.downloads > 0) out.push(d)
-    }
+    await sleep(delayMs)
   }
   return out
+}
+
+export function dailyMap(days: NpmDay[]): Record<string, number> {
+  const map: Record<string, number> = {}
+  for (const d of days) {
+    if (d.downloads > 0) {
+      map[d.day] = d.downloads
+    }
+  }
+  return map
 }
