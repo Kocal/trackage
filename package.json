@@ -8,7 +8,9 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "stats": "tsx scripts/fetch-stats.ts"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.117",
@@ -20,7 +22,9 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.16.0",
     "eslint": "^10.7.0",
+    "tsx": "^4.23.1",
     "typescript": "^6.0.3",
+    "vitest": "^4.1.10",
     "vue-tsc": "^3.3.7"
   },
   "packageManager": "pnpm@11.13.1"
