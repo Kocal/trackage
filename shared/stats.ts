@@ -1,27 +1,30 @@
 export type Registry = 'npm' | 'packagist'
 
-export interface Snapshot {
-  date: string
+export interface PackageHistory {
   total: number
-  last30: number
-  lastDay: number
   stars: number
+  daily: Record<string, number>
 }
 
 export interface History {
   generatedAt: string
-  packages: Record<string, Snapshot[]>
+  packages: Record<string, PackageHistory>
 }
 
 export function packageKey(registry: Registry, name: string): string {
   return `${registry}:${name}`
 }
 
-export function mergeSnapshot(series: Snapshot[] | undefined, snapshot: Snapshot): Snapshot[] {
-  const rest = (series ?? []).filter(s => s.date !== snapshot.date)
-  return [...rest, snapshot].sort((a, b) => a.date.localeCompare(b.date))
+export function sumDaily(daily: Record<string, number>): number {
+  return Object.values(daily).reduce((sum, v) => sum + v, 0)
 }
 
-export function sparklineFromSeries(series: Snapshot[], days = 30): number[] {
-  return series.slice(-days).map(s => s.lastDay)
+export function sumLastNDays(daily: Record<string, number>, n: number): number {
+  const dates = Object.keys(daily).sort().slice(-n)
+  return dates.reduce((sum, d) => sum + daily[d], 0)
+}
+
+export function sparklineSeries(daily: Record<string, number>, n = 30): number[] {
+  const dates = Object.keys(daily).sort().slice(-n)
+  return dates.map(d => daily[d])
 }

@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mergeSnapshot, packageKey, sparklineFromSeries, type Snapshot } from '../shared/stats'
-
-const snap = (date: string, lastDay: number): Snapshot => ({ date, total: 100, last30: 30, lastDay, stars: 5 })
+import { packageKey, sparklineSeries, sumDaily, sumLastNDays } from '../shared/stats'
 
 describe('packageKey', () => {
   it('joins registry and name', () => {
@@ -9,26 +7,41 @@ describe('packageKey', () => {
   })
 })
 
-describe('mergeSnapshot', () => {
-  it('appends and keeps date order', () => {
-    const out = mergeSnapshot([snap('2026-07-19', 1)], snap('2026-07-20', 2))
-    expect(out.map(s => s.date)).toEqual(['2026-07-19', '2026-07-20'])
+describe('sumDaily', () => {
+  it('sums all values', () => {
+    expect(sumDaily({ '2026-07-19': 3, '2026-07-20': 4 })).toBe(7)
   })
 
-  it('overwrites same-day snapshot (idempotent)', () => {
-    const out = mergeSnapshot([snap('2026-07-20', 1)], snap('2026-07-20', 9))
-    expect(out).toHaveLength(1)
-    expect(out[0].lastDay).toBe(9)
-  })
-
-  it('handles undefined series', () => {
-    expect(mergeSnapshot(undefined, snap('2026-07-20', 1))).toHaveLength(1)
+  it('is safe on empty input', () => {
+    expect(sumDaily({})).toBe(0)
   })
 })
 
-describe('sparklineFromSeries', () => {
-  it('returns the last N lastDay values', () => {
-    const series = [snap('2026-07-18', 1), snap('2026-07-19', 2), snap('2026-07-20', 3)]
-    expect(sparklineFromSeries(series, 2)).toEqual([2, 3])
+describe('sumLastNDays', () => {
+  it('sums all values when there are fewer than n dates', () => {
+    const daily = { '2026-07-19': 3, '2026-07-20': 4 }
+    expect(sumLastNDays(daily, 30)).toBe(7)
+  })
+
+  it('sums all values when there are exactly n dates', () => {
+    const daily = { '2026-07-19': 3, '2026-07-20': 4 }
+    expect(sumLastNDays(daily, 2)).toBe(7)
+  })
+
+  it('sums only the most-recent n dates when there are more than n', () => {
+    const daily = { '2026-07-18': 1, '2026-07-19': 2, '2026-07-20': 3 }
+    expect(sumLastNDays(daily, 2)).toBe(5)
+  })
+})
+
+describe('sparklineSeries', () => {
+  it('returns values in ascending date order', () => {
+    const daily = { '2026-07-20': 3, '2026-07-18': 1, '2026-07-19': 2 }
+    expect(sparklineSeries(daily, 3)).toEqual([1, 2, 3])
+  })
+
+  it('returns only the last n values in ascending date order', () => {
+    const daily = { '2026-07-18': 1, '2026-07-19': 2, '2026-07-20': 3 }
+    expect(sparklineSeries(daily, 2)).toEqual([2, 3])
   })
 })
