@@ -135,3 +135,12 @@ The combined headline sums npm + Composer downloads, which are different units. 
 - `pnpm lint && pnpm typecheck` green (matches CI).
 - Cloudflare Pages preview deploy renders the dashboard.
 - Manually dispatch `update-stats.yml` once to confirm the commit-and-push loop works end to end.
+
+## Revision 1 (2026-07-21)
+
+Two design changes agreed after initial implementation:
+
+1. **GitHub stars per package's own repo.** Symfony UX packages are read-only split repos (`symfony/ux-vue`, `symfony/ux-map`, …), each with its own star count — use those, not the `symfony/ux` monorepo. kocal repos use exact casing from their Packagist `repository` field (`Kocal/BiomeJsBundle`, etc.).
+2. **Day-by-day data model.** Persist the **full all-time daily download series** per package; compute `last30` (and total, sparkline) **application-side**. Both npm (`/downloads/range/`) and Packagist (`/stats/all.json?average=daily&from=<date>`) provide daily series, so both are fully backfilled at seed. This also removes the earlier "sparklines start empty" limitation.
+
+New `data/history.json` shape: `packages[<key>] = { total, stars, daily: { "YYYY-MM-DD": downloads } }`. Displayed metrics: **total, last-30-days, 30-day sparkline, stars** (no 7d/yesterday shown). The daily fetch runs in two modes — full backfill for the seed, last-~35-days incremental for the daily cron — to keep scheduled runs light and avoid npm 429 rate-limiting. See the plan's "Revision 1" section for the exact contracts and task breakdown (R1/R2/R3).

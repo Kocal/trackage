@@ -15,9 +15,10 @@
 - ESLint stylistic rules already configured: `commaDangle: 'never'`, `braceStyle: '1tbs'`. Run `pnpm lint --fix` before committing; every task must leave `pnpm lint` and `pnpm typecheck` green.
 - Nuxt 4 path aliases: `~` = `app/`, `~~` = repo root. Config lives at `app/data/projects.config.ts` (`~/data/...`); data lives at `data/history.json` (`~~/data/...`).
 - No code comments unless the "why" is non-obvious (project convention).
-- Snapshot shape is fixed across the whole codebase: `{ date, total, last30, lastDay, stars }`. Package key is `` `${registry}:${name}` ``.
+- Package key is `` `${registry}:${name}` ``.
 - npm all-time totals MUST use the `/downloads/range/` endpoint chunked at ≤500 days (the `/point/` endpoint silently truncates at 18 months).
-- Metrics per package: `total`, `last30`, `lastDay`, `stars`, plus a 30-day sparkline. GitHub stars are shown per package (repeated for monorepo siblings).
+
+> **SEE "Revision 1" BELOW — it supersedes Tasks 2, 4, 5, 7, 8 and the data model.** The original tasks stored a pre-aggregated `{ date, total, last30, lastDay, stars }` snapshot. Revision 1 changes this to a **day-by-day model**: persist the full all-time daily download series per package; compute `total`/`last30`/sparkline **app-side**. GitHub stars come from each package's **own repo** (Symfony UX packages use their split repos, e.g. `symfony/ux-vue`, not the `symfony/ux` monorepo).
 
 ---
 
@@ -1320,3 +1321,70 @@ git commit -m "docs: rewrite README for trackage"
 **Placeholder scan:** no TBD/TODO; all code steps contain full code. The only intentional runtime verification is the `@symfony/ux-*` npm-existence check in Task 3/7 (documented, with a concrete `curl` command and fallback).
 
 **Type consistency:** `Snapshot`/`History`/`Registry` defined once in `shared/stats.ts` (Task 2) and reused everywhere. `packageKey` signature consistent across Tasks 2, 7, 8. `ProjectView`/`PackageView` defined in Task 8, consumed in Tasks 10, 11. ✓
+
+---
+
+## Revision 1 — day-by-day data model + per-package repos (2026-07-21)
+
+Two user directives after Tasks 1–7 landed:
+1. **Stars from each package's own GitHub repo**, not the shared `symfony/ux` monorepo. All 9 Symfony UX packages have their own split repos (`symfony/ux-vue`, `symfony/ux-map`, …, all verified 200). kocal repos need correct casing from each Packagist `repository` field.
+2. **Persist per-day downloads; compute last-30 app-side.** Store the **full all-time daily series** per package; the app derives `total`/`last30`/sparkline from it.
+
+Both npm (`/downloads/range/`) and Packagist (`/stats/all.json?average=daily&from=<date>` → `{ labels:[dates], values:{ "<pkg>":[counts] } }`) expose daily time series, so full backfill is possible for both. **Display metrics: `total`, `last30`, 30-day sparkline, GitHub stars.** (No 7d/yesterday shown; last-7 is trivially derivable if wanted later.)
+
+This **supersedes Tasks 2, 4, 5, 7, 8**. Re-executed as R1/R2/R3 below. Tasks 1, 3 (config data, with corrected repos), 6 (github) stay; Tasks 9–14 build on the new view-model.
+
+### New data model — `data/history.json`
+```json
+{
+  "generatedAt": "2026-07-21T04:00:00.000Z",
+  "packages": {
+    "npm:@symfony/ux-vue": {
+      "total": 12345678,
+      "stars": 42,
+      "daily": { "2021-03-01": 5, "2026-07-21": 130 }
+    }
+  }
+}
+```
+`total` = authoritative all-time scalar (npm: sum of full range; Packagist: `downloads.total`). `stars` = latest from the package's own repo. `daily` = full all-time date→downloads map.
+
+### Fixed contracts (Revision 1)
+- `shared/stats.ts`:
+  - `type Registry = 'npm' | 'packagist'`
+  - `interface PackageHistory { total: number; stars: number; daily: Record<string, number> }`
+  - `interface History { generatedAt: string; packages: Record<string, PackageHistory> }`
+  - `interface PackageUpdate { total: number; stars: number; daily: Record<string, number> }`
+  - `packageKey(registry, name): string` (unchanged)
+  - `mergePackage(existing: PackageHistory | undefined, update: PackageUpdate): PackageHistory` — `daily: { ...existing?.daily, ...update.daily }` (new dates overwrite same date), `total`/`stars` taken from `update`.
+  - `sumLastNDays(daily, n): number` — sum of the values for the n most-recent dates (ascending sort by date key, take last n).
+  - `sparklineSeries(daily, n = 30): number[]` — the n most-recent daily values in ascending date order.
+
+### R1 — data model + libs (supersedes Tasks 2, 4, 5; folds in Task 3 repo fixes)
+
+**Files:** `shared/stats.ts` (rewrite), `scripts/lib/npm.ts` (harden + daily helper), `scripts/lib/packagist.ts` (total + new daily fetch), `app/data/projects.config.ts` (repo slugs), + their tests. TDD throughout.
+
+- `shared/stats.ts`: implement the contracts above. Tests: `mergePackage` (merge/overwrite/undefined), `sumLastNDays`, `sparklineSeries`.
+- `scripts/lib/npm.ts`: keep `chunkRanges`/`aggregate`/`fetchNpmDays`. **Add throttle + HTTP-429 retry with exponential backoff** (timing injectable so tests stay instant: options `{ delayMs, sleep }`, tests pass `delayMs: 0`/no-op sleep). Add `dailyMap(days: NpmDay[]): Record<string, number>`. Strengthen the `fetchNpmDays` test to vary per-chunk responses and assert merge; add a 429-retry test.
+- `scripts/lib/packagist.ts`: `fetchPackagistTotal(name, fetchFn?): Promise<{ total: number }>` from `packages/{name}.json` `downloads.total`. `fetchPackagistDaily(name, from, fetchFn?): Promise<Record<string, number>>` from `packages/{name}/stats/all.json?average=daily&from={from}`, zipping `labels` with `values[name]`. Throw on non-ok. Tests with sample payloads (incl. the `values` keyed by package name).
+- `app/data/projects.config.ts`: repoint every UX package (npm + packagist entries) to its own split repo (`symfony/ux-vue`, `symfony/ux-translator`, `symfony/ux-react`, `symfony/ux-native`, `symfony/ux-leaflet-map`, `symfony/ux-google-map`, `symfony/ux-map`, `symfony/ux-toolkit`, `symfony/ux-calendar-link`); fix kocal repos to `Kocal/BiomeJsBundle`, `Kocal/SymfonyMailerTesting`, `Kocal/OxcBundle`, `Kocal/phpstan-symfony-ux`. Webpack Encore + Reprise unchanged.
+
+### R2 — orchestrator + full seed (supersedes Task 7)
+
+**Files:** `scripts/fetch-stats.ts` (rewrite), `data/history.json` (regenerated).
+
+Per package: npm → `fetchNpmDays` → `daily = dailyMap(days)`, `total = aggregate(days).total`; packagist → `total = fetchPackagistTotal(name)`, `daily = fetchPackagistDaily(name, from)`; `stars = fetchStars(repo, token)` for all. `mergePackage` into the file.
+
+Two modes via a `BACKFILL` env flag:
+- **Backfill (seed):** npm range from `2015-01-10`, Packagist daily from `2012-01-01` → full history.
+- **Incremental (cron default):** npm range + Packagist daily for the **last ~35 days** only, merged into the accumulated file (older days already persisted). Keeps the daily cron light and avoids 429s.
+
+Then run `BACKFILL=1 GITHUB_TOKEN="$(gh auth token)" pnpm stats` once to seed. Verify all 23 packages have a `daily` map + `total` + `stars`; UX packages have their own (distinct) star counts; kocal packages non-zero stars. Spot-check `packagist:symfony/webpack-encore-bundle` `total` vs live.
+
+### R3 — dashboard view-model (supersedes Task 8)
+
+**Files:** `app/utils/dashboard.ts`, `test/dashboard.test.ts`.
+
+`buildDashboard(projects, history)` derives per package `{ registry, name, repo, total, last30 (sumLastNDays(daily,30)), sparkline (sparklineSeries(daily,30)), stars }`; per project `{ name, combinedTotal, combinedLast30, packages, sparkline }` where the project sparkline = per-date sum of package daily maps over the last 30 dates; dashboard `{ generatedAt, totalDownloads, totalStars, projects }`. Tests cover combine, per-package derivation, dashboard totals, empty history.
+
+**Downstream:** Task 10 (`ProjectTile.vue`) drops the "24h/lastDay" row; shows total headline + `combinedLast30` (labeled "30d · npm + Packagist") + sparkline + per-package rows (registry icon, total, stars). Task 11 header shows total downloads + total stars + updated time. The `PackageView`/`ProjectView` field names above are the fixed contract for Tasks 10–11.
