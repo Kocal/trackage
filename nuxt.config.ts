@@ -15,14 +15,14 @@ export default defineNuxtConfig({
     '/': { prerender: true }
   },
 
+  compatibilityDate: '2026-06-30',
+
   nitro: {
     preset: 'cloudflare-pages',
     prerender: {
       routes: ['/']
     }
   },
-
-  compatibilityDate: '2026-06-30',
 
   eslint: {
     config: {
