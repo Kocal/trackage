@@ -9,6 +9,7 @@ const props = defineProps<{ project: ProjectView | null }>()
 const VueUiXy = defineAsyncComponent(() => import('vue-data-ui/vue-ui-xy'))
 
 const { history, pending, error, load } = useHistory()
+const colorMode = useColorMode()
 const nf = new Intl.NumberFormat('en-US')
 
 watch(open, (value) => {
@@ -33,33 +34,47 @@ const dataset = computed(() => {
     name: `${p.registry} · ${p.name}`,
     type: 'line' as const,
     color: p.registry === 'npm' ? '#00DC82' : '#F28D1A',
-    series: p.series.map((y, x) => ({ x, y }))
+    series: p.series
   }))
 })
 
-const chartConfig = computed(() => ({
-  responsive: true,
-  chart: {
-    backgroundColor: 'transparent',
-    zoom: {
-      show: true,
-      minimap: {
+const chartConfig = computed(() => {
+  const textColor = colorMode.value === 'dark' ? '#a1a1aa' : '#3f3f46'
+  return {
+    responsive: true,
+    downsample: { threshold: 500 },
+    chart: {
+      backgroundColor: 'transparent',
+      color: textColor,
+      zoom: {
         show: true,
-        compact: true,
-        handleType: 'grab' as const
-      }
-    },
-    grid: {
-      labels: {
-        xAxisLabels: {
+        minimap: {
           show: true,
-          values: detail.value?.dates ?? [],
-          showOnlyFirstAndLast: true
+          compact: true,
+          handleType: 'grab' as const
+        }
+      },
+      legend: {
+        color: textColor
+      },
+      tooltip: {
+        show: true,
+        showTimeLabel: true
+      },
+      grid: {
+        labels: {
+          color: textColor,
+          xAxisLabels: {
+            color: textColor,
+            show: true,
+            values: detail.value?.dates ?? [],
+            showOnlyFirstAndLast: true
+          }
         }
       }
     }
   }
-}))
+})
 
 const periodCards = computed(() => {
   const t = detail.value?.totals
@@ -77,6 +92,10 @@ const periodCards = computed(() => {
 
 function registryIcon(registry: string) {
   return registry === 'npm' ? 'i-simple-icons-npm' : 'i-simple-icons-packagist'
+}
+
+function tooltipName(name: string) {
+  return name.split(' · ').pop() ?? name
 }
 </script>
 
@@ -104,7 +123,29 @@ function registryIcon(registry: string) {
             <VueUiXy
               :dataset="dataset"
               :config="chartConfig"
-            />
+            >
+              <template #tooltip="{ datapoint, timeLabel }">
+                <div class="max-w-[16rem] space-y-1 text-left text-xs">
+                  <div class="font-semibold">
+                    {{ timeLabel?.text }}
+                  </div>
+                  <div
+                    v-for="dp in datapoint"
+                    :key="dp.name"
+                    class="flex items-center justify-between gap-3"
+                  >
+                    <span class="flex min-w-0 items-center gap-1.5">
+                      <span
+                        class="size-2 shrink-0 rounded-full"
+                        :style="{ backgroundColor: dp.color }"
+                      />
+                      <span class="truncate">{{ tooltipName(dp.name) }}</span>
+                    </span>
+                    <span class="shrink-0 font-medium tabular-nums">{{ dp.value === null ? '—' : nf.format(dp.value) }}</span>
+                  </div>
+                </div>
+              </template>
+            </VueUiXy>
           </div>
           <template #fallback>
             <USkeleton class="h-80 w-full" />
