@@ -66,6 +66,33 @@ describe('buildDashboard', () => {
     expect(dashboard.projects[0]?.combinedTotal).toBe(300)
   })
 
+  it('sums only the last 7 axis days for combinedLast7', () => {
+    const projects: TrackedProject[] = [
+      {
+        name: 'Webpack Encore',
+        packages: [
+          { registry: 'npm', name: '@symfony/webpack-encore', repo: 'symfony/webpack-encore' }
+        ]
+      }
+    ]
+    const history: History = {
+      generatedAt: '2026-07-21T00:00:00Z',
+      packages: {
+        'npm:@symfony/webpack-encore': {
+          total: 100,
+          stars: 10,
+          daily: { '2026-07-05': 50, '2026-07-20': 3 }
+        }
+      }
+    }
+
+    const dashboard = buildDashboard(projects, history)
+
+    // axis ends 2026-07-20; the last 7 days (07-14..07-20) exclude 07-05
+    expect(dashboard.projects[0]?.combinedLast7).toBe(3)
+    expect(dashboard.projects[0]?.combinedLast30).toBe(53)
+  })
+
   it('aligns a single package\'s sparkline to the 30-day axis, zero-filling absent days', () => {
     const projects: TrackedProject[] = [
       {

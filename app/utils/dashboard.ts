@@ -14,6 +14,7 @@ export interface PackageView {
 export interface ProjectView {
   name: string
   combinedTotal: number
+  combinedLast7: number
   combinedLast30: number
   sparkline: number[]
   packages: PackageView[]
@@ -96,6 +97,7 @@ export function buildDashboard(projects: TrackedProject[], history: History): Da
     return {
       name: project.name,
       combinedTotal: packageViews.reduce((sum, pkg) => sum + pkg.total, 0),
+      combinedLast7: combinedAligned.slice(-7).reduce((sum, v) => sum + v, 0),
       combinedLast30: combinedAligned.reduce((sum, v) => sum + v, 0),
       sparkline: combinedAligned,
       packages: packageViews

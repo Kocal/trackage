@@ -26,7 +26,7 @@ function registryIcon(registry: string) {
       <span class="text-xs text-muted">total downloads</span>
     </div>
     <p class="mt-1 text-sm text-muted tabular-nums">
-      {{ nf.format(project.combinedLast30) }} in the last 30 days
+      {{ nf.format(project.combinedLast7) }} last 7 days · {{ nf.format(project.combinedLast30) }} last 30 days
     </p>
 
     <div class="mt-4 space-y-2">
