@@ -1,3 +1,6 @@
+import { projects } from './app/data/projects.config'
+import { projectSlug } from './shared/stats'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: [
@@ -24,7 +27,7 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'cloudflare_module',
     prerender: {
-      routes: ['/', '/history.json']
+      routes: ['/', ...projects.map(p => `/history/${projectSlug(p.name)}.json`)]
     }
   },
 

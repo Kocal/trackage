@@ -1,20 +1,32 @@
 <script setup lang="ts">
 import type { ProjectView } from '~/utils/dashboard'
 import { buildProjectDetail } from '~/utils/projectDetail'
-import { useHistory } from '~/composables/useHistory'
+import { useProjectHistory } from '~/composables/useProjectHistory'
+import { projectSlug } from '~~/shared/stats'
 
 const open = defineModel<boolean>('open', { default: false })
 const props = defineProps<{ project: ProjectView | null }>()
 
 const VueUiXy = defineAsyncComponent(() => import('vue-data-ui/vue-ui-xy'))
 
-const { history, pending, error, load } = useHistory()
+const slug = computed(() => props.project ? projectSlug(props.project.name) : '')
+const state = computed(() => useProjectHistory(slug.value))
+const history = computed(() => state.value.history.value)
+const pending = computed(() => state.value.pending.value)
+const error = computed(() => state.value.error.value)
+
+function load() {
+  if (slug.value) {
+    state.value.load()
+  }
+}
+
 const colorMode = useColorMode()
 const nf = new Intl.NumberFormat('en-US')
 
 watch(open, (value) => {
-  if (value) {
-    load()
+  if (value && slug.value) {
+    state.value.load()
   }
 })
 
