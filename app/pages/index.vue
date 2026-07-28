@@ -14,7 +14,7 @@ provideSparklineHover(dashboard.value?.dates ?? [])
 const nf = new Intl.NumberFormat('en-US')
 const updated = computed(() => dashboard.value?.generatedAt ? new Date(dashboard.value.generatedAt).toLocaleDateString() : 'never')
 
-useSeoMeta({ title: 'trackage', description: 'Download and star stats for my npm and Packagist packages.' })
+useSeoMeta({ title: 'Trackage', description: 'Download and star stats for my npm and Packagist packages.' })
 </script>
 
 <template>
@@ -24,7 +24,7 @@ useSeoMeta({ title: 'trackage', description: 'Download and star stats for my npm
   >
     <div class="mb-6">
       <h1 class="text-2xl font-bold">
-        trackage
+        Trackage
       </h1>
       <p class="text-sm text-muted">
         {{ nf.format(dashboard.totalDownloads) }} downloads · {{ nf.format(dashboard.totalStars) }} stars · updated {{ updated }}

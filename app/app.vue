@@ -11,7 +11,7 @@ useHead({
   }
 })
 
-const title = 'trackage'
+const title = 'Trackage'
 const description = 'Download and star stats for my npm and Packagist packages.'
 
 useSeoMeta({
@@ -31,7 +31,7 @@ useSeoMeta({
           to="/"
           class="font-bold text-highlighted shrink-0"
         >
-          trackage
+          Trackage
         </NuxtLink>
       </template>
 
@@ -58,7 +58,7 @@ useSeoMeta({
     <UFooter>
       <template #left>
         <p class="text-sm text-muted">
-          trackage • © {{ new Date().getFullYear() }}
+          Trackage • © {{ new Date().getFullYear() }}
         </p>
       </template>
 
