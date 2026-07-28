@@ -171,7 +171,7 @@ function registryIcon(registry: string) {
                 variant="ghost"
                 color="neutral"
                 icon="i-simple-icons-github"
-                aria-label="GitHub repository"
+                :aria-label="`${pkg.name} on GitHub`"
               />
             </div>
           </div>
