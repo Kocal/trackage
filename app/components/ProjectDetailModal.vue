@@ -6,7 +6,7 @@ import { useHistory } from '~/composables/useHistory'
 const open = defineModel<boolean>('open', { default: false })
 const props = defineProps<{ project: ProjectView | null }>()
 
-const VueUiXy = defineAsyncComponent(() => import('vue-data-ui').then(m => ({ default: m.VueUiXy })))
+const VueUiXy = defineAsyncComponent(() => import('vue-data-ui/vue-ui-xy'))
 
 const { history, pending, error, load } = useHistory()
 const nf = new Intl.NumberFormat('en-US')
@@ -44,6 +44,7 @@ const chartConfig = computed(() => ({
     zoom: {
       show: true,
       minimap: {
+        show: true,
         compact: true,
         handleType: 'grab' as const
       }
@@ -96,13 +97,17 @@ function registryIcon(registry: string) {
         </div>
 
         <ClientOnly>
-          <VueUiXy
+          <div
             v-if="dataset.length"
-            :dataset="dataset"
-            :config="chartConfig"
-          />
+            class="h-80 w-full"
+          >
+            <VueUiXy
+              :dataset="dataset"
+              :config="chartConfig"
+            />
+          </div>
           <template #fallback>
-            <USkeleton class="h-64 w-full" />
+            <USkeleton class="h-80 w-full" />
           </template>
         </ClientOnly>
 
