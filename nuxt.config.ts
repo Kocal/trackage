@@ -9,7 +9,11 @@ export default defineNuxtConfig({
     enabled: true
   },
 
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css', 'vue-data-ui/style.css'],
+
+  build: {
+    transpile: ['vue-data-ui']
+  },
 
   routeRules: {
     '/': { prerender: true }
