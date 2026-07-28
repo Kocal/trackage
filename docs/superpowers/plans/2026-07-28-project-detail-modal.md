@@ -117,9 +117,10 @@ git commit -m "feat: serve history.json as a static asset with a memoized useHis
 **Files:**
 - Create: `app/utils/projectDetail.ts`
 - Create: `test/project-detail.test.ts`
+- Modify: `app/utils/dashboard.ts` (export the existing `mergeDaily` helper for reuse)
 
 **Interfaces:**
-- Consumes: `TrackedProject` from `~/data/projects.config`, `History`/`Registry`/`packageKey` from `~~/shared/stats`. Accepts anything structurally matching `{ name, packages: { registry, name, repo }[] }` — a `ProjectView` from `~/utils/dashboard` is compatible and is what the modal passes.
+- Consumes: `TrackedProject` from `~/data/projects.config`, `History`/`Registry`/`packageKey` from `~~/shared/stats`, `mergeDaily` from `~/utils/dashboard`. Accepts anything structurally matching `{ name, packages: { registry, name, repo }[] }` — a `ProjectView` from `~/utils/dashboard` is compatible and is what the modal passes.
 - Produces:
   - `interface PackageDetail { registry: Registry; name: string; repo: string; packageUrl: string; githubUrl: string; total: number; last7: number; last30: number; stars: number; series: number[] }`
   - `interface ProjectDetail { name: string; dates: string[]; packages: PackageDetail[]; combinedTotal: number; totalStars: number; totals: { d7: number; d30: number; d90: number; d365: number; all: number }; peakDay: { date: string; downloads: number } | null; averagePerDay: number; firstTrackedDate: string | null }`
@@ -232,10 +233,15 @@ describe('buildProjectDetail', () => {
 Run: `pnpm test test/project-detail.test.ts`
 Expected: FAIL (cannot find module `~/utils/projectDetail`).
 
-- [ ] **Step 3: Implement `app/utils/projectDetail.ts`**
+- [ ] **Step 3: Export the shared helper, then implement `app/utils/projectDetail.ts`**
+
+First, in `app/utils/dashboard.ts`, export the existing `mergeDaily` helper for reuse — change its declaration `function mergeDaily(` to `export function mergeDaily(`. Do not duplicate its body anywhere.
+
+Then create `app/utils/projectDetail.ts`:
 
 ```ts
 import type { TrackedProject } from '~/data/projects.config'
+import { mergeDaily } from '~/utils/dashboard'
 import { packageKey, type History, type Registry } from '~~/shared/stats'
 
 export interface PackageDetail {
@@ -267,16 +273,6 @@ function packageUrl(registry: Registry, name: string): string {
   return registry === 'npm'
     ? `https://www.npmjs.com/package/${name}`
     : `https://packagist.org/packages/${name}`
-}
-
-function mergeDaily(dailies: Record<string, number>[]): Record<string, number> {
-  const combined: Record<string, number> = {}
-  for (const daily of dailies) {
-    for (const [date, value] of Object.entries(daily)) {
-      combined[date] = (combined[date] ?? 0) + value
-    }
-  }
-  return combined
 }
 
 function continuousAxis(daily: Record<string, number>): string[] {
