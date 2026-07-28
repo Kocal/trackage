@@ -6,8 +6,16 @@ import type { ProjectView } from '~/utils/dashboard'
 import type { History } from '~~/shared/stats'
 
 const { data: dashboard } = await useAsyncData('dashboard', async () => {
-  const history = (await import('~~/data/history.json')).default as History
-  return buildDashboard(projects, history)
+  const modules = import.meta.glob('~~/data/history/*.json')
+  const merged: History = { generatedAt: '', packages: {} }
+  for (const load of Object.values(modules)) {
+    const h = (await load() as { default: History }).default
+    Object.assign(merged.packages, h.packages)
+    if (h.generatedAt > merged.generatedAt) {
+      merged.generatedAt = h.generatedAt
+    }
+  }
+  return buildDashboard(projects, merged)
 })
 
 provideSparklineHover(dashboard.value?.dates ?? [])
