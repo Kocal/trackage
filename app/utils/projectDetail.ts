@@ -81,8 +81,9 @@ export function buildProjectDetail(project: TrackedProject, history: History): P
   })
 
   let peakDay: { date: string, downloads: number } | null = null
-  for (const [date, downloads] of Object.entries(combinedDaily)) {
-    if (!peakDay || downloads > peakDay.downloads) {
+  for (const date of dates) {
+    const downloads = combinedDaily[date] ?? 0
+    if (downloads > 0 && (!peakDay || downloads > peakDay.downloads)) {
       peakDay = { date, downloads }
     }
   }

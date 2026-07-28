@@ -92,4 +92,25 @@ describe('buildProjectDetail', () => {
     expect(detail.packages[0]?.series).toEqual([])
     expect(detail.combinedTotal).toBe(0)
   })
+
+  it('breaks a peakDay tie by the earliest date', () => {
+    const project: TrackedProject = {
+      name: 'Tie',
+      packages: [
+        { registry: 'npm', name: '@x/late', repo: 'x/tie' },
+        { registry: 'packagist', name: 'x/early', repo: 'x/tie' }
+      ]
+    }
+    const history: History = {
+      generatedAt: '2026-07-10T00:00:00Z',
+      packages: {
+        'npm:@x/late': { total: 100, stars: 0, daily: { '2026-07-08': 50 } },
+        'packagist:x/early': { total: 100, stars: 0, daily: { '2026-07-05': 50 } }
+      }
+    }
+
+    const detail = buildProjectDetail(project, history)
+
+    expect(detail.peakDay).toEqual({ date: '2026-07-05', downloads: 50 })
+  })
 })
