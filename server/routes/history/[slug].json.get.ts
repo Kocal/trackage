@@ -1,10 +1,9 @@
-const files = import.meta.glob('~~/data/history/*.json', { eager: true, import: 'default' })
-
-export default defineEventHandler((event) => {
-  const slug = getRouterParam(event, 'slug')
-  const match = Object.entries(files).find(([path]) => path.endsWith(`/${slug}.json`))
-  if (!match) {
+export default defineEventHandler(async (event) => {
+  const slugWithExt = getRouterParam(event, 'slug.json')
+  const slug = slugWithExt?.replace(/\.json$/, '')
+  const item = await useStorage('assets:history').getItem(`${slug}.json`)
+  if (!item) {
     throw createError({ statusCode: 404, statusMessage: 'not found' })
   }
-  return match[1]
+  return item
 })

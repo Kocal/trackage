@@ -26,6 +26,9 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: 'cloudflare_module',
+    serverAssets: [
+      { baseName: 'history', dir: '../data/history' }
+    ],
     prerender: {
       routes: ['/', ...projects.map(p => `/history/${projectSlug(p.name)}.json`)]
     }
