@@ -1,22 +1,8 @@
 <script setup lang="ts">
 import { provideSparklineHover } from '~/composables/sparklineHover'
-import { projects } from '~/data/projects.config'
-import { buildDashboard } from '~/utils/dashboard'
-import type { ProjectView } from '~/utils/dashboard'
-import type { History } from '~~/shared/stats'
+import type { Dashboard, ProjectView } from '~/utils/dashboard'
 
-const { data: dashboard } = await useAsyncData('dashboard', async () => {
-  const modules = import.meta.glob('~~/data/history/*.json')
-  const merged: History = { generatedAt: '', packages: {} }
-  for (const load of Object.values(modules)) {
-    const h = (await load() as { default: History }).default
-    Object.assign(merged.packages, h.packages)
-    if (h.generatedAt > merged.generatedAt) {
-      merged.generatedAt = h.generatedAt
-    }
-  }
-  return buildDashboard(projects, merged)
-})
+const { data: dashboard } = await useAsyncData<Dashboard>('dashboard', () => $fetch('/api/dashboard'))
 
 provideSparklineHover(dashboard.value?.dates ?? [])
 

@@ -30,7 +30,7 @@ export default defineNuxtConfig({
       { baseName: 'history', dir: '../data/history' }
     ],
     prerender: {
-      routes: ['/', ...projects.map(p => `/history/${projectSlug(p.name)}.json`)]
+      routes: ['/', '/api/dashboard', ...projects.map(p => `/history/${projectSlug(p.name)}.json`)]
     }
   },
 
