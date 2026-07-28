@@ -3,6 +3,8 @@
 Date: 2026-07-21
 Status: approved
 
+> **Note (2026-07-28):** deployment later moved from Cloudflare Pages to Cloudflare **Workers** (static assets, Nitro `cloudflare_module` preset, `wrangler.jsonc` with an `ASSETS` binding). The "Cloudflare Pages" and `cloudflare-pages` references below are historical. The build-on-push-to-`main` -> SSG model is unchanged.
+
 ## Context
 
 I maintain a set of PHP (Packagist) and JS (npm) packages, several of them linked (a PHP bundle plus its JS counterpart). Today I check download counts and GitHub stars one package page at a time. `trackage` is a single dashboard that shows all of them at a glance: total / last-30-days / last-day downloads, GitHub stars, and a 30-day trend sparkline per package, with linked PHP+JS packages grouped into one tile.

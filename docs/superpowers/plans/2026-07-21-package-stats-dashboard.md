@@ -1,5 +1,7 @@
 # Package-Stats Dashboard Implementation Plan
 
+> **Note (2026-07-28):** deployment later moved from Cloudflare Pages to Cloudflare **Workers** (Nitro `cloudflare_module` preset, `wrangler.jsonc` with an `ASSETS` binding). Task 12's `cloudflare-pages` preset and the "Cloudflare Pages" mentions below are historical; the actual current target is Workers.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** A single static Nuxt page showing download + star stats for ~16 npm/Packagist packages, refreshed daily by a GitHub Action that commits a JSON history file.
