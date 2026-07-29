@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+.vue-data-ui-line-animated,
+.line-animated {
+  animation: none !important;
+  stroke-dasharray: 0 !important;
+  stroke-dashoffset: 0 !important;
+}
+
 @theme static {
   --font-sans: 'Public Sans', sans-serif;
 
