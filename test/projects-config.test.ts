@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { projects } from '../app/data/projects.config'
-import { packageKey } from '../shared/stats'
+import { packageKey, projectSlug } from '../shared/stats'
 
 describe('projects config', () => {
   it('has projects', () => {
@@ -21,5 +21,13 @@ describe('projects config', () => {
   it('has no duplicate package keys', () => {
     const keys = projects.flatMap(p => p.packages.map(pkg => packageKey(pkg.registry, pkg.name)))
     expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('slugs are non-empty and unique', () => {
+    const slugs = projects.map(p => projectSlug(p.name))
+    for (const slug of slugs) {
+      expect(slug.length).toBeGreaterThan(0)
+    }
+    expect(new Set(slugs).size).toBe(slugs.length)
   })
 })

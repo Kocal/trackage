@@ -28,7 +28,7 @@ export interface Dashboard {
   projects: ProjectView[]
 }
 
-function mergeDaily(dailies: Record<string, number>[]): Record<string, number> {
+export function mergeDaily(dailies: Record<string, number>[]): Record<string, number> {
   const combined: Record<string, number> = {}
   for (const daily of dailies) {
     for (const [date, value] of Object.entries(daily)) {

@@ -23,6 +23,9 @@ importers:
       tailwindcss:
         specifier: ^4.3.2
         version: 4.3.2
+      vue-data-ui:
+        specifier: ^3.22.14
+        version: 3.22.14(vue@3.5.35(typescript@6.0.3))
     devDependencies:
       '@nuxt/eslint':
         specifier: ^1.16.0
@@ -5273,6 +5276,15 @@ packages:
 
   vue-component-type-helpers@3.3.7:
     resolution: {integrity: sha512-Skkhw9agYSgsWqv7bxSOGJZa9SaiJbZVGdXuFWnrzKaQYHnw9qbjD630rw6RyMqDbp54nfLCLw5SZA55if7JLg==}
+
+  vue-data-ui@3.22.14:
+    resolution: {integrity: sha512-90NtOSzc5sGvKn2MW6BN/eb+L4A2gAH1f8R+boa6tS0/amCgs2eHCO89SShTinaempqnnbAp00bQ5X7Bm0ZKuw==}
+    peerDependencies:
+      jspdf: '>=3.0.1'
+      vue: '>=3.3.0'
+    peerDependenciesMeta:
+      jspdf:
+        optional: true
 
   vue-demi@0.14.10:
     resolution: {integrity: sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==}
@@ -11001,6 +11013,10 @@ snapshots:
       ufo: 1.6.4
 
   vue-component-type-helpers@3.3.7: {}
+
+  vue-data-ui@3.22.14(vue@3.5.35(typescript@6.0.3)):
+    dependencies:
+      vue: 3.5.35(typescript@6.0.3)
 
   vue-demi@0.14.10(vue@3.5.35(typescript@6.0.3)):
     dependencies:

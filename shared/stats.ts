@@ -18,3 +18,7 @@ export function packageKey(registry: Registry, name: string): string {
 export function sumDaily(daily: Record<string, number>): number {
   return Object.values(daily).reduce((sum, v) => sum + v, 0)
 }
+
+export function projectSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+}

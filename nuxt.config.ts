@@ -1,3 +1,6 @@
+import { projects } from './app/data/projects.config'
+import { projectSlug } from './shared/stats'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: [
@@ -9,7 +12,11 @@ export default defineNuxtConfig({
     enabled: true
   },
 
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css', 'vue-data-ui/style.css'],
+
+  build: {
+    transpile: ['vue-data-ui']
+  },
 
   routeRules: {
     '/': { prerender: true }
@@ -19,8 +26,11 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: 'cloudflare_module',
+    serverAssets: [
+      { baseName: 'history', dir: '../data/history' }
+    ],
     prerender: {
-      routes: ['/']
+      routes: ['/', '/api/dashboard', ...projects.map(p => `/history/${projectSlug(p.name)}.json`)]
     }
   },
 

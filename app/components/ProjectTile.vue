@@ -3,6 +3,8 @@ import type { ProjectView } from '~/utils/dashboard'
 
 defineProps<{ project: ProjectView }>()
 
+const emit = defineEmits<{ open: [] }>()
+
 const nf = new Intl.NumberFormat('en-US')
 
 function registryIcon(registry: string) {
@@ -11,7 +13,15 @@ function registryIcon(registry: string) {
 </script>
 
 <template>
-  <UCard variant="subtle">
+  <UCard
+    variant="subtle"
+    role="button"
+    tabindex="0"
+    class="cursor-pointer transition hover:ring-2 hover:ring-primary/40"
+    @click="emit('open')"
+    @keydown.enter="emit('open')"
+    @keydown.space.prevent="emit('open')"
+  >
     <template #header>
       <div class="flex items-center justify-between gap-2">
         <h3 class="font-semibold truncate">

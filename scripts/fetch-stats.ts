@@ -3,9 +3,8 @@ import { projects } from '../app/data/projects.config'
 import { fetchStars } from './lib/github'
 import { dailyMap, fetchNpmDays } from './lib/npm'
 import { fetchPackagistDaily, fetchPackagistTotal } from './lib/packagist'
-import { packageKey, sumDaily, type History } from '../shared/stats'
+import { packageKey, projectSlug, sumDaily, type History } from '../shared/stats'
 
-const HISTORY_PATH = new URL('../data/history.json', import.meta.url)
 const token = process.env.GITHUB_TOKEN ?? ''
 const backfill = Boolean(process.env.BACKFILL)
 const today = new Date().toISOString().slice(0, 10)
@@ -19,17 +18,20 @@ function daysAgo(n: number): string {
 const npmStart = backfill ? '2015-01-10' : daysAgo(35)
 const packagistFrom = backfill ? '2012-01-01' : daysAgo(35)
 
-async function loadHistory(): Promise<History> {
+async function loadHistory(path: URL): Promise<History> {
   try {
-    return JSON.parse(await readFile(HISTORY_PATH, 'utf8')) as History
+    return JSON.parse(await readFile(path, 'utf8')) as History
   } catch {
     return { generatedAt: '', packages: {} }
   }
 }
 
 async function main() {
-  const history = await loadHistory()
+  await mkdir(new URL('../data/history/', import.meta.url), { recursive: true })
   for (const project of projects) {
+    const slug = projectSlug(project.name)
+    const filePath = new URL(`../data/history/${slug}.json`, import.meta.url)
+    const history = await loadHistory(filePath)
     for (const pkg of project.packages) {
       const key = packageKey(pkg.registry, pkg.name)
       try {
@@ -49,11 +51,10 @@ async function main() {
         console.error(`fail ${key}: ${(err as Error).message}`)
       }
     }
+    history.generatedAt = new Date().toISOString()
+    await writeFile(filePath, `${JSON.stringify(history, null, 2)}\n`)
+    console.log(`wrote ${filePath.pathname}`)
   }
-  history.generatedAt = new Date().toISOString()
-  await mkdir(new URL('../data/', import.meta.url), { recursive: true })
-  await writeFile(HISTORY_PATH, `${JSON.stringify(history, null, 2)}\n`)
-  console.log(`wrote ${HISTORY_PATH.pathname}`)
 }
 
 main()

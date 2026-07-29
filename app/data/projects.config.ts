@@ -1,4 +1,4 @@
-import type { Registry } from '~~/shared/stats'
+import type { Registry } from '../../shared/stats'
 
 export interface TrackedPackage {
   registry: Registry

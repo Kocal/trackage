@@ -1,13 +1,8 @@
 <script setup lang="ts">
 import { provideSparklineHover } from '~/composables/sparklineHover'
-import { projects } from '~/data/projects.config'
-import { buildDashboard } from '~/utils/dashboard'
-import type { History } from '~~/shared/stats'
+import type { Dashboard, ProjectView } from '~/utils/dashboard'
 
-const { data: dashboard } = await useAsyncData('dashboard', async () => {
-  const history = (await import('~~/data/history.json')).default as History
-  return buildDashboard(projects, history)
-})
+const { data: dashboard } = await useAsyncData<Dashboard>('dashboard', () => $fetch('/api/dashboard'))
 
 provideSparklineHover(dashboard.value?.dates ?? [])
 
@@ -15,6 +10,14 @@ const nf = new Intl.NumberFormat('en-US')
 const updated = computed(() => dashboard.value?.generatedAt ? new Date(dashboard.value.generatedAt).toLocaleDateString() : 'never')
 
 useSeoMeta({ title: 'Trackage', description: 'Download and star stats for my npm and Packagist packages.' })
+
+const selected = ref<ProjectView | null>(null)
+const detailOpen = ref(false)
+
+function openProject(project: ProjectView) {
+  selected.value = project
+  detailOpen.value = true
+}
 </script>
 
 <template>
@@ -36,7 +39,13 @@ useSeoMeta({ title: 'Trackage', description: 'Download and star stats for my npm
         v-for="project in dashboard.projects"
         :key="project.name"
         :project="project"
+        @open="openProject(project)"
       />
     </div>
+
+    <ProjectDetailModal
+      v-model:open="detailOpen"
+      :project="selected"
+    />
   </div>
 </template>
