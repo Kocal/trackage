@@ -24,9 +24,14 @@ function load() {
 const colorMode = useColorMode()
 const nf = new Intl.NumberFormat('en-US')
 
+const chartReady = ref(false)
+
 watch(open, (value) => {
   if (value && slug.value) {
     state.value.load()
+  }
+  if (!value) {
+    chartReady.value = false
   }
 })
 
@@ -50,11 +55,22 @@ const dataset = computed(() => {
   }))
 })
 
+watch([open, () => dataset.value.length], ([isOpen, count]) => {
+  if (import.meta.client && isOpen && count > 0 && !chartReady.value) {
+    requestAnimationFrame(() => {
+      if (open.value) {
+        chartReady.value = true
+      }
+    })
+  }
+})
+
 const chartConfig = computed(() => {
   const textColor = colorMode.value === 'dark' ? '#a1a1aa' : '#3f3f46'
   return {
     responsive: true,
-    downsample: { threshold: 500 },
+    useCssAnimation: false,
+    downsample: { threshold: 250 },
     chart: {
       backgroundColor: 'transparent',
       color: textColor,
@@ -129,7 +145,7 @@ function tooltipName(name: string) {
 
         <ClientOnly>
           <div
-            v-if="dataset.length"
+            v-if="dataset.length && chartReady"
             class="h-80 w-full"
           >
             <VueUiXy
@@ -159,6 +175,10 @@ function tooltipName(name: string) {
               </template>
             </VueUiXy>
           </div>
+          <USkeleton
+            v-else
+            class="h-80 w-full"
+          />
           <template #fallback>
             <USkeleton class="h-80 w-full" />
           </template>
