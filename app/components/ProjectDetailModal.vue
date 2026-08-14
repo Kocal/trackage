@@ -51,7 +51,7 @@ const dataset = computed(() => {
     name: `${p.registry} · ${p.name}`,
     type: 'line' as const,
     color: p.registry === 'npm' ? '#00DC82' : '#F28D1A',
-    series: p.series
+    series: p.chartSeries
   }))
 })
 
@@ -70,7 +70,6 @@ const chartConfig = computed(() => {
   return {
     responsive: true,
     useCssAnimation: false,
-    downsample: { threshold: 250 },
     chart: {
       backgroundColor: 'transparent',
       color: textColor,
@@ -95,7 +94,7 @@ const chartConfig = computed(() => {
           xAxisLabels: {
             color: textColor,
             show: true,
-            values: detail.value?.dates ?? [],
+            values: detail.value?.chartDates ?? [],
             showOnlyFirstAndLast: true
           }
         }

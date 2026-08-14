@@ -13,11 +13,13 @@ export interface PackageDetail {
   last30: number
   stars: number
   series: number[]
+  chartSeries: number[]
 }
 
 export interface ProjectDetail {
   name: string
   dates: string[]
+  chartDates: string[]
   packages: PackageDetail[]
   combinedTotal: number
   totalStars: number
@@ -54,6 +56,31 @@ function sumLastN(values: number[], n: number): number {
   return values.slice(-n).reduce((sum, v) => sum + v, 0)
 }
 
+const CHART_BUCKET_DAYS = 7
+
+function bucketDates(dates: string[], size: number): string[] {
+  const out: string[] = []
+  for (let i = 0; i < dates.length; i += size) {
+    const start = dates[i]
+    if (start !== undefined) {
+      out.push(start)
+    }
+  }
+  return out
+}
+
+function bucketSum(series: number[], size: number): number[] {
+  const out: number[] = []
+  for (let i = 0; i < series.length; i += size) {
+    let sum = 0
+    for (let j = i; j < i + size && j < series.length; j++) {
+      sum += series[j] ?? 0
+    }
+    out.push(sum)
+  }
+  return out
+}
+
 export function buildProjectDetail(project: TrackedProject, history: History): ProjectDetail {
   const dailies = project.packages.map(p => history.packages[packageKey(p.registry, p.name)]?.daily ?? {})
   const combinedDaily = mergeDaily(dailies)
@@ -76,7 +103,8 @@ export function buildProjectDetail(project: TrackedProject, history: History): P
       last7: sumLastN(series, 7),
       last30: sumLastN(series, 30),
       stars: entry?.stars ?? 0,
-      series
+      series,
+      chartSeries: bucketSum(series, CHART_BUCKET_DAYS)
     }
   })
 
@@ -94,6 +122,7 @@ export function buildProjectDetail(project: TrackedProject, history: History): P
   return {
     name: project.name,
     dates,
+    chartDates: bucketDates(dates, CHART_BUCKET_DAYS),
     packages,
     combinedTotal,
     totalStars: Array.from(starsByRepo.values()).reduce((sum, v) => sum + v, 0),

@@ -20,6 +20,8 @@ describe('buildProjectDetail', () => {
 
     expect(detail.dates).toEqual(['2026-07-01', '2026-07-02', '2026-07-03'])
     expect(detail.packages[0]?.series).toEqual([10, 0, 5])
+    expect(detail.chartDates).toEqual(['2026-07-01'])
+    expect(detail.packages[0]?.chartSeries).toEqual([15])
     expect(detail.packages[0]?.total).toBe(999)
     expect(detail.packages[0]?.last7).toBe(15)
     expect(detail.packages[0]?.packageUrl).toBe('https://www.npmjs.com/package/@x/x')
@@ -52,6 +54,8 @@ describe('buildProjectDetail', () => {
     const detail = buildProjectDetail(project, history)
 
     expect(detail.dates).toHaveLength(50) // 2026-06-01 .. 2026-07-20 inclusive
+    expect(detail.chartDates).toHaveLength(8) // ceil(50 / 7) weekly buckets
+    expect(detail.chartDates[0]).toBe('2026-06-01')
     expect(detail.firstTrackedDate).toBe('2026-06-01')
     expect(detail.combinedTotal).toBe(1500)
     expect(detail.totalStars).toBe(35) // deduped: both packages share symfony/ux-vue
@@ -70,6 +74,7 @@ describe('buildProjectDetail', () => {
     const detail = buildProjectDetail({ name: 'E', packages: [] }, { generatedAt: '', packages: {} })
 
     expect(detail.dates).toEqual([])
+    expect(detail.chartDates).toEqual([])
     expect(detail.packages).toEqual([])
     expect(detail.combinedTotal).toBe(0)
     expect(detail.totals).toEqual({ d7: 0, d30: 0, d90: 0, d365: 0, all: 0 })
@@ -90,6 +95,7 @@ describe('buildProjectDetail', () => {
     expect(detail.dates).toEqual([])
     expect(detail.packages[0]?.total).toBe(0)
     expect(detail.packages[0]?.series).toEqual([])
+    expect(detail.packages[0]?.chartSeries).toEqual([])
     expect(detail.combinedTotal).toBe(0)
   })
 
