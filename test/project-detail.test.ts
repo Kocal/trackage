@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { TrackedProject } from '~/data/projects.config'
+import { bridgeColor, CORE_COLOR } from '~/utils/colors'
 import { buildProjectDetail } from '~/utils/projectDetail'
 import type { History } from '~~/shared/stats'
 
@@ -97,6 +98,95 @@ describe('buildProjectDetail', () => {
     expect(detail.packages[0]?.series).toEqual([])
     expect(detail.packages[0]?.chartSeries).toEqual([])
     expect(detail.combinedTotal).toBe(0)
+  })
+
+  it('computes family stats from the core and tags bridge packages', () => {
+    const project: TrackedProject = {
+      name: 'UX Map',
+      packages: [{ registry: 'packagist', name: 'symfony/ux-map', repo: 'symfony/ux-map' }],
+      bridges: [
+        {
+          name: 'Leaflet',
+          packages: [
+            { registry: 'packagist', name: 'symfony/ux-leaflet-map', repo: 'symfony/ux-leaflet-map' },
+            { registry: 'npm', name: '@symfony/ux-leaflet-map', repo: 'symfony/ux-leaflet-map' }
+          ]
+        }
+      ]
+    }
+    const history: History = {
+      generatedAt: '2026-07-04T00:00:00Z',
+      packages: {
+        'packagist:symfony/ux-map': { total: 1000, stars: 19, daily: { '2026-07-01': 10, '2026-07-03': 30 } },
+        'packagist:symfony/ux-leaflet-map': { total: 700, stars: 15, daily: { '2026-07-02': 50 } },
+        'npm:@symfony/ux-leaflet-map': { total: 40, stars: 15, daily: { '2026-07-03': 4 } }
+      }
+    }
+
+    const detail = buildProjectDetail(project, history)
+
+    expect(detail.dates).toEqual(['2026-07-01', '2026-07-02', '2026-07-03'])
+    expect(detail.combinedTotal).toBe(1000)
+    expect(detail.totals.all).toBe(1000)
+    expect(detail.totals.d7).toBe(40)
+    expect(detail.peakDay).toEqual({ date: '2026-07-03', downloads: 30 })
+    expect(detail.averagePerDay).toBe(13)
+    expect(detail.totalStars).toBe(34)
+    expect(detail.bridgesNpmTotal).toBe(40)
+    expect(detail.packages.map(p => [p.name, p.bridge, p.color, p.dashed])).toEqual([
+      ['symfony/ux-map', null, CORE_COLOR, false],
+      ['symfony/ux-leaflet-map', 'Leaflet', bridgeColor(0), false],
+      ['@symfony/ux-leaflet-map', 'Leaflet', bridgeColor(0), true]
+    ])
+    expect(detail.packages[1]?.series).toEqual([0, 50, 0])
+  })
+
+  it('keeps registry colors for a project without bridges', () => {
+    const project: TrackedProject = {
+      name: 'UX Vue',
+      packages: [
+        { registry: 'packagist', name: 'symfony/ux-vue', repo: 'symfony/ux-vue' },
+        { registry: 'npm', name: '@symfony/ux-vue', repo: 'symfony/ux-vue' }
+      ]
+    }
+    const history: History = {
+      generatedAt: '2026-07-21T00:00:00Z',
+      packages: {
+        'packagist:symfony/ux-vue': { total: 1000, stars: 35, daily: { '2026-07-20': 20 } },
+        'npm:@symfony/ux-vue': { total: 500, stars: 35, daily: { '2026-07-20': 5 } }
+      }
+    }
+
+    const detail = buildProjectDetail(project, history)
+
+    expect(detail.packages.map(p => [p.registry, p.bridge, p.color, p.dashed])).toEqual([
+      ['packagist', null, '#F28D1A', false],
+      ['npm', null, '#00DC82', false]
+    ])
+    expect(detail.bridgesNpmTotal).toBe(0)
+  })
+
+  it('zeroes a bridge package missing from history', () => {
+    const project: TrackedProject = {
+      name: 'Core',
+      packages: [{ registry: 'packagist', name: 'x/core', repo: 'x/core' }],
+      bridges: [
+        { name: 'Ghost', packages: [{ registry: 'packagist', name: 'x/ghost', repo: 'x/ghost' }] }
+      ]
+    }
+    const history: History = {
+      generatedAt: '2026-07-04T00:00:00Z',
+      packages: {
+        'packagist:x/core': { total: 3, stars: 0, daily: { '2026-07-01': 1, '2026-07-02': 2 } }
+      }
+    }
+
+    const detail = buildProjectDetail(project, history)
+    const ghost = detail.packages.find(p => p.name === 'x/ghost')
+
+    expect(ghost?.series).toEqual([0, 0])
+    expect(ghost?.total).toBe(0)
+    expect(ghost?.bridge).toBe('Ghost')
   })
 
   it('breaks a peakDay tie by the earliest date', () => {

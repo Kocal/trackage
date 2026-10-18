@@ -1,4 +1,5 @@
-import type { TrackedProject } from '~/data/projects.config'
+import type { TrackedPackage, TrackedProject } from '~/data/projects.config'
+import { bridgeColor, CORE_COLOR, REGISTRY_COLORS } from '~/utils/colors'
 import { mergeDaily } from '~/utils/dashboard'
 import { packageKey, type History, type Registry } from '~~/shared/stats'
 
@@ -14,6 +15,9 @@ export interface PackageDetail {
   stars: number
   series: number[]
   chartSeries: number[]
+  bridge: string | null
+  color: string
+  dashed: boolean
 }
 
 export interface ProjectDetail {
@@ -23,6 +27,7 @@ export interface ProjectDetail {
   packages: PackageDetail[]
   combinedTotal: number
   totalStars: number
+  bridgesNpmTotal: number
   totals: { d7: number, d30: number, d90: number, d365: number, all: number }
   peakDay: { date: string, downloads: number } | null
   averagePerDay: number
@@ -81,14 +86,38 @@ function bucketSum(series: number[], size: number): number[] {
   return out
 }
 
+interface Member {
+  pkg: TrackedPackage
+  bridge: string | null
+  color: string
+  dashed: boolean
+}
+
+function membersOf(project: TrackedProject): Member[] {
+  const bridges = project.bridges ?? []
+  if (bridges.length === 0) {
+    return project.packages.map(pkg => ({ pkg, bridge: null, color: REGISTRY_COLORS[pkg.registry], dashed: false }))
+  }
+  return [
+    ...project.packages.map(pkg => ({ pkg, bridge: null, color: CORE_COLOR, dashed: pkg.registry === 'npm' })),
+    ...bridges.flatMap((bridge, index) => bridge.packages.map(pkg => ({
+      pkg,
+      bridge: bridge.name,
+      color: bridgeColor(index),
+      dashed: pkg.registry === 'npm'
+    })))
+  ]
+}
+
 export function buildProjectDetail(project: TrackedProject, history: History): ProjectDetail {
-  const dailies = project.packages.map(p => history.packages[packageKey(p.registry, p.name)]?.daily ?? {})
-  const combinedDaily = mergeDaily(dailies)
-  const dates = continuousAxis(combinedDaily)
+  const dailyOf = (p: TrackedPackage) => history.packages[packageKey(p.registry, p.name)]?.daily ?? {}
+  const members = membersOf(project)
+  const dates = continuousAxis(mergeDaily(members.map(m => dailyOf(m.pkg))))
+  const combinedDaily = mergeDaily(project.packages.map(dailyOf))
   const combinedAligned = dates.map(d => combinedDaily[d] ?? 0)
 
   const starsByRepo = new Map<string, number>()
-  const packages: PackageDetail[] = project.packages.map((p) => {
+  const packages: PackageDetail[] = members.map(({ pkg: p, bridge, color, dashed }) => {
     const entry = history.packages[packageKey(p.registry, p.name)]
     const daily = entry?.daily ?? {}
     const series = dates.map(d => daily[d] ?? 0)
@@ -104,7 +133,10 @@ export function buildProjectDetail(project: TrackedProject, history: History): P
       last30: sumLastN(series, 30),
       stars: entry?.stars ?? 0,
       series,
-      chartSeries: bucketSum(series, CHART_BUCKET_DAYS)
+      chartSeries: bucketSum(series, CHART_BUCKET_DAYS),
+      bridge,
+      color,
+      dashed
     }
   })
 
@@ -116,8 +148,9 @@ export function buildProjectDetail(project: TrackedProject, history: History): P
     }
   }
 
-  const combinedTotal = packages.reduce((sum, p) => sum + p.total, 0)
+  const combinedTotal = packages.filter(p => p.bridge === null).reduce((sum, p) => sum + p.total, 0)
   const dailySum = combinedAligned.reduce((sum, v) => sum + v, 0)
+  const bridgesNpmTotal = packages.filter(p => p.bridge !== null && p.registry === 'npm').reduce((sum, p) => sum + p.total, 0)
 
   return {
     name: project.name,
@@ -126,6 +159,7 @@ export function buildProjectDetail(project: TrackedProject, history: History): P
     packages,
     combinedTotal,
     totalStars: Array.from(starsByRepo.values()).reduce((sum, v) => sum + v, 0),
+    bridgesNpmTotal,
     totals: {
       d7: sumLastN(combinedAligned, 7),
       d30: sumLastN(combinedAligned, 30),
