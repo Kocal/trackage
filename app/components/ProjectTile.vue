@@ -65,11 +65,11 @@ function bridgeFigure(bridge: BridgeView): number {
         + {{ nf.format(project.bridgesNpmTotal) }} npm downloads
       </p>
 
-      <div class="@container mt-4 space-y-2">
+      <div class="mt-4 grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-x-2 gap-y-2 text-sm">
         <div
           v-for="bridge in project.bridges"
           :key="bridge.name"
-          class="flex items-center justify-between gap-2 text-sm"
+          class="contents"
         >
           <div class="flex items-center gap-1.5 min-w-0">
             <span
@@ -78,24 +78,24 @@ function bridgeFigure(bridge: BridgeView): number {
             />
             <span class="truncate">{{ bridge.name }}</span>
           </div>
-          <div class="flex items-center gap-2 shrink-0 tabular-nums text-muted">
-            <Sparkline
-              class="hidden @min-[19.25rem]:block"
-              :values="bridge.sparkline"
-              :color="bridge.color"
-              :tooltip="false"
-              :width="80"
-              :height="24"
+          <Sparkline
+            :values="bridge.sparkline"
+            :color="bridge.color"
+            :tooltip="false"
+            :height="24"
+            fluid
+          />
+          <span class="grid text-right tabular-nums text-muted">
+            <span class="invisible col-start-1 row-start-1">{{ nf.format(bridge.total) }}</span>
+            <span class="col-start-1 row-start-1">{{ nf.format(bridgeFigure(bridge)) }}</span>
+          </span>
+          <span class="flex items-center justify-end gap-0.5 tabular-nums text-muted">
+            <UIcon
+              name="i-lucide-star"
+              class="text-warning"
             />
-            <span class="w-16 text-right">{{ nf.format(bridgeFigure(bridge)) }}</span>
-            <span class="flex w-10 items-center justify-end gap-0.5">
-              <UIcon
-                name="i-lucide-star"
-                class="text-warning"
-              />
-              {{ nf.format(bridge.stars) }}
-            </span>
-          </div>
+            {{ nf.format(bridge.stars) }}
+          </span>
         </div>
       </div>
     </template>

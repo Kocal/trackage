@@ -10,16 +10,39 @@ const props = withDefaults(defineProps<{
   height?: number
   color?: string
   tooltip?: boolean
+  fluid?: boolean
 }>(), {
   width: 140,
   height: 36,
   color: undefined,
-  tooltip: true
+  tooltip: true,
+  fluid: false
 })
 
 const hover = useSparklineHover()
 const nf = new Intl.NumberFormat('en-US')
 const svgEl = ref<SVGSVGElement | null>(null)
+const rootEl = ref<HTMLDivElement | null>(null)
+const measuredWidth = ref<number | null>(null)
+const drawWidth = computed(() => props.fluid && measuredWidth.value !== null ? measuredWidth.value : props.width)
+
+let resizeObserver: ResizeObserver | null = null
+
+onMounted(() => {
+  if (!props.fluid || !rootEl.value) {
+    return
+  }
+  resizeObserver = new ResizeObserver(([entry]) => {
+    if (entry) {
+      measuredWidth.value = entry.contentRect.width
+    }
+  })
+  resizeObserver.observe(rootEl.value)
+})
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+})
 
 const geometry = computed(() => {
   const values = props.values
@@ -29,7 +52,7 @@ const geometry = computed(() => {
   const max = Math.max(...values)
   const min = Math.min(...values)
   const span = max - min || 1
-  const stepX = props.width / (values.length - 1)
+  const stepX = drawWidth.value / (values.length - 1)
   const points = values.map((value, i) => ({
     x: i * stepX,
     y: props.height - ((value - min) / span) * props.height
@@ -93,14 +116,15 @@ function onLeave() {
 
 <template>
   <div
+    ref="rootEl"
     class="relative"
-    :style="{ width: `${width}px`, height: `${height}px` }"
+    :style="{ width: fluid ? '100%' : `${width}px`, height: `${height}px` }"
   >
     <svg
       ref="svgEl"
-      :width="width"
+      :width="fluid && measuredWidth === null ? '100%' : drawWidth"
       :height="height"
-      :viewBox="`0 0 ${width} ${height}`"
+      :viewBox="`0 0 ${drawWidth} ${height}`"
       class="text-primary overflow-visible"
       :style="color ? { color } : undefined"
       preserveAspectRatio="none"
