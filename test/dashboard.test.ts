@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { TrackedProject } from '~/data/projects.config'
+import { bridgeColor } from '~/utils/colors'
 import { buildDashboard } from '~/utils/dashboard'
 import type { History } from '~~/shared/stats'
 
@@ -191,6 +192,92 @@ describe('buildDashboard', () => {
     const dashboard = buildDashboard(projects, history)
 
     expect(dashboard.totalStars).toBe(51)
+    expect(dashboard.projects[0]?.bridges).toEqual([])
+    expect(dashboard.projects[0]?.bridgesNpmTotal).toBe(0)
+    expect(dashboard.projects[0]?.totalStars).toBe(35)
+  })
+
+  it('computes a family card from its core and exposes one view per bridge', () => {
+    const uxMap: TrackedProject = {
+      name: 'UX Map',
+      packages: [{ registry: 'packagist', name: 'symfony/ux-map', repo: 'symfony/ux-map' }],
+      bridges: [
+        {
+          name: 'Leaflet',
+          packages: [
+            { registry: 'packagist', name: 'symfony/ux-leaflet-map', repo: 'symfony/ux-leaflet-map' },
+            { registry: 'npm', name: '@symfony/ux-leaflet-map', repo: 'symfony/ux-leaflet-map' }
+          ]
+        },
+        {
+          name: 'Google Maps',
+          packages: [
+            { registry: 'packagist', name: 'symfony/ux-google-map', repo: 'symfony/ux-google-map' },
+            { registry: 'npm', name: '@symfony/ux-google-map', repo: 'symfony/ux-google-map' }
+          ]
+        }
+      ]
+    }
+    const history: History = {
+      generatedAt: '2026-07-21T00:00:00Z',
+      packages: {
+        'packagist:symfony/ux-map': { total: 1000, stars: 19, daily: { '2026-07-19': 10, '2026-07-20': 20 } },
+        'packagist:symfony/ux-leaflet-map': { total: 700, stars: 15, daily: { '2026-07-19': 6, '2026-07-20': 12 } },
+        'npm:@symfony/ux-leaflet-map': { total: 40, stars: 15, daily: { '2026-07-20': 4 } },
+        'packagist:symfony/ux-google-map': { total: 290, stars: 9, daily: { '2026-07-20': 7 } },
+        'npm:@symfony/ux-google-map': { total: 30, stars: 9, daily: { '2026-07-20': 3 } }
+      }
+    }
+
+    const dashboard = buildDashboard([uxMap], history)
+    const project = dashboard.projects[0]
+
+    expect(project?.combinedTotal).toBe(1000)
+    expect(project?.combinedLast30).toBe(30)
+    expect(project?.sparkline.slice(-2)).toEqual([10, 20])
+    expect(project?.packages).toHaveLength(1)
+    expect(project?.totalStars).toBe(43)
+    expect(project?.bridgesNpmTotal).toBe(70)
+    expect(project?.bridges.map(b => b.name)).toEqual(['Leaflet', 'Google Maps'])
+
+    const [leaflet, google] = project?.bridges ?? []
+    expect(leaflet?.total).toBe(700)
+    expect(leaflet?.last30).toBe(18)
+    expect(leaflet?.sparkline).toHaveLength(30)
+    expect(leaflet?.sparkline.slice(-2)).toEqual([6, 12])
+    expect(leaflet?.stars).toBe(15)
+    expect(leaflet?.packages).toHaveLength(2)
+    expect(leaflet?.color).toBe(bridgeColor(0))
+    expect(google?.total).toBe(290)
+    expect(google?.sparkline.slice(-2)).toEqual([0, 7])
+    expect(google?.stars).toBe(9)
+    expect(google?.color).toBe(bridgeColor(1))
+
+    expect(dashboard.totalDownloads).toBe(1000)
+    expect(dashboard.totalStars).toBe(43)
+  })
+
+  it('yields a zeroed bridge when the bridge is missing from history', () => {
+    const project: TrackedProject = {
+      name: 'Core',
+      packages: [{ registry: 'packagist', name: 'x/core', repo: 'x/core' }],
+      bridges: [
+        { name: 'Ghost', packages: [{ registry: 'packagist', name: 'x/ghost', repo: 'x/ghost' }] }
+      ]
+    }
+    const history: History = {
+      generatedAt: '2026-07-21T00:00:00Z',
+      packages: {
+        'packagist:x/core': { total: 1, stars: 0, daily: { '2026-07-20': 1 } }
+      }
+    }
+
+    const bridge = buildDashboard([project], history).projects[0]?.bridges[0]
+
+    expect(bridge?.total).toBe(0)
+    expect(bridge?.stars).toBe(0)
+    expect(bridge?.last30).toBe(0)
+    expect(bridge?.sparkline).toEqual(Array(30).fill(0))
   })
 
   it('yields zeros and an empty sparkline for a package missing from history when there is no date axis', () => {

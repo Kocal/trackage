@@ -1,4 +1,5 @@
-import type { TrackedProject } from '~/data/projects.config'
+import type { TrackedPackage, TrackedProject } from '~/data/projects.config'
+import { bridgeColor } from '~/utils/colors'
 import { packageKey, type History, type Registry } from '~~/shared/stats'
 
 export interface PackageView {
@@ -11,6 +12,16 @@ export interface PackageView {
   stars: number
 }
 
+export interface BridgeView {
+  name: string
+  color: string
+  total: number
+  last30: number
+  sparkline: number[]
+  stars: number
+  packages: PackageView[]
+}
+
 export interface ProjectView {
   name: string
   combinedTotal: number
@@ -18,6 +29,9 @@ export interface ProjectView {
   combinedLast30: number
   sparkline: number[]
   packages: PackageView[]
+  bridges: BridgeView[]
+  totalStars: number
+  bridgesNpmTotal: number
 }
 
 export interface Dashboard {
@@ -62,45 +76,70 @@ function buildDateAxis(history: History, days: number): string[] {
   return dates
 }
 
+function sum(values: number[]): number {
+  return values.reduce((total, v) => total + v, 0)
+}
+
+function starsOfDistinctRepos(packages: PackageView[]): number {
+  return sum(Array.from(new Map(packages.map(pkg => [pkg.repo, pkg.stars])).values()))
+}
+
 export function buildDashboard(projects: TrackedProject[], history: History): Dashboard {
   const starsByRepo = new Map<string, number>()
   const dates = buildDateAxis(history, 30)
 
+  const dailyOf = (pkg: TrackedPackage) => history.packages[packageKey(pkg.registry, pkg.name)]?.daily ?? {}
+  const align = (daily: Record<string, number>) => dates.map(d => daily[d] ?? 0)
+
+  function packageView(pkg: TrackedPackage): PackageView {
+    const entry = history.packages[packageKey(pkg.registry, pkg.name)]
+    const aligned = align(entry?.daily ?? {})
+
+    return {
+      registry: pkg.registry,
+      name: pkg.name,
+      repo: pkg.repo,
+      total: entry?.total ?? 0,
+      last30: sum(aligned),
+      sparkline: aligned,
+      stars: entry?.stars ?? 0
+    }
+  }
+
   const projectViews: ProjectView[] = projects.map((project) => {
-    const dailies: Record<string, number>[] = []
+    const packageViews = project.packages.map(packageView)
+    const combinedAligned = align(mergeDaily(project.packages.map(dailyOf)))
 
-    const packageViews: PackageView[] = project.packages.map((pkg) => {
-      const entry = history.packages[packageKey(pkg.registry, pkg.name)]
-      const daily = entry?.daily ?? {}
-      const total = entry?.total ?? 0
-      const stars = entry?.stars ?? 0
-
-      starsByRepo.set(pkg.repo, stars)
-      dailies.push(daily)
-
-      const aligned = dates.map(d => daily[d] ?? 0)
+    const bridges: BridgeView[] = (project.bridges ?? []).map((bridge, index) => {
+      const views = bridge.packages.map(packageView)
+      const sparkline = align(mergeDaily(bridge.packages.filter(pkg => pkg.registry === 'packagist').map(dailyOf)))
 
       return {
-        registry: pkg.registry,
-        name: pkg.name,
-        repo: pkg.repo,
-        total,
-        last30: aligned.reduce((sum, v) => sum + v, 0),
-        sparkline: aligned,
-        stars
+        name: bridge.name,
+        color: bridgeColor(index),
+        total: sum(views.filter(view => view.registry === 'packagist').map(view => view.total)),
+        last30: sum(sparkline),
+        sparkline,
+        stars: starsOfDistinctRepos(views),
+        packages: views
       }
     })
 
-    const combinedDaily = mergeDaily(dailies)
-    const combinedAligned = dates.map(d => combinedDaily[d] ?? 0)
+    const familyPackages = [...packageViews, ...bridges.flatMap(bridge => bridge.packages)]
+    for (const pkg of familyPackages) {
+      starsByRepo.set(pkg.repo, pkg.stars)
+    }
 
     return {
       name: project.name,
-      combinedTotal: packageViews.reduce((sum, pkg) => sum + pkg.total, 0),
-      combinedLast7: combinedAligned.slice(-7).reduce((sum, v) => sum + v, 0),
-      combinedLast30: combinedAligned.reduce((sum, v) => sum + v, 0),
+      combinedTotal: sum(packageViews.map(pkg => pkg.total)),
+      combinedLast7: sum(combinedAligned.slice(-7)),
+      combinedLast30: sum(combinedAligned),
       sparkline: combinedAligned,
-      packages: packageViews
+      packages: packageViews,
+      bridges,
+      totalStars: starsOfDistinctRepos(familyPackages),
+      bridgesNpmTotal: sum(bridges.flatMap(bridge => bridge.packages).filter(pkg => pkg.registry === 'npm').map(pkg => pkg.total))
     }
   })
 
