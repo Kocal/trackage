@@ -65,7 +65,7 @@ function bridgeFigure(bridge: BridgeView): number {
         + {{ nf.format(project.bridgesNpmTotal) }} npm downloads
       </p>
 
-      <div class="mt-4 space-y-2">
+      <div class="@container mt-4 space-y-2">
         <div
           v-for="bridge in project.bridges"
           :key="bridge.name"
@@ -78,16 +78,17 @@ function bridgeFigure(bridge: BridgeView): number {
             />
             <span class="truncate">{{ bridge.name }}</span>
           </div>
-          <div class="flex items-center gap-3 shrink-0 tabular-nums text-muted">
+          <div class="flex items-center gap-2 shrink-0 tabular-nums text-muted">
             <Sparkline
+              class="hidden @min-[19.25rem]:block"
               :values="bridge.sparkline"
               :color="bridge.color"
               :tooltip="false"
-              :width="110"
+              :width="80"
               :height="24"
             />
-            <span>{{ nf.format(bridgeFigure(bridge)) }}</span>
-            <span class="flex items-center gap-0.5">
+            <span class="w-16 text-right">{{ nf.format(bridgeFigure(bridge)) }}</span>
+            <span class="flex w-10 items-center justify-end gap-0.5">
               <UIcon
                 name="i-lucide-star"
                 class="text-warning"
