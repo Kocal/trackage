@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-18T04:13:08.920Z",
+  "generatedAt": "2026-10-18T17:12:40.325Z",
   "packages": {
     "packagist:kocal/phpstan-symfony-ux": {
-      "total": 83562,
+      "total": 83613,
       "stars": 28,
       "daily": {
         "2025-11-24": 11,

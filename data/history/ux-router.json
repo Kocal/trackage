@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-18T14:38:29.926Z",
+  "generatedAt": "2026-10-18T17:12:39.143Z",
   "packages": {
     "packagist:symfony/ux-router": {
-      "total": 127,
+      "total": 131,
       "stars": 5,
       "daily": {
         "2026-10-11": 8,
