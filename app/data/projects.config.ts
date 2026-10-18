@@ -6,9 +6,19 @@ export interface TrackedPackage {
   repo: string
 }
 
+export interface TrackedBridge {
+  name: string
+  packages: TrackedPackage[]
+}
+
 export interface TrackedProject {
   name: string
   packages: TrackedPackage[]
+  bridges?: TrackedBridge[]
+}
+
+export function allPackages(project: TrackedProject): TrackedPackage[] {
+  return [...project.packages, ...(project.bridges ?? []).flatMap(bridge => bridge.packages)]
 }
 
 export const projects: TrackedProject[] = [
@@ -61,53 +71,57 @@ export const projects: TrackedProject[] = [
     ]
   },
   {
-    name: 'UX Leaflet Map',
-    packages: [
-      { registry: 'packagist', name: 'symfony/ux-leaflet-map', repo: 'symfony/ux-leaflet-map' },
-      { registry: 'npm', name: '@symfony/ux-leaflet-map', repo: 'symfony/ux-leaflet-map' }
-    ]
-  },
-  {
-    name: 'UX Google Map',
-    packages: [
-      { registry: 'packagist', name: 'symfony/ux-google-map', repo: 'symfony/ux-google-map' },
-      { registry: 'npm', name: '@symfony/ux-google-map', repo: 'symfony/ux-google-map' }
-    ]
-  },
-  {
     name: 'UX Map',
     packages: [
       { registry: 'packagist', name: 'symfony/ux-map', repo: 'symfony/ux-map' }
-    ]
-  },
-  {
-    name: 'UX Cloudflare Image',
-    packages: [
-      { registry: 'packagist', name: 'symfony/ux-cloudflare-image', repo: 'symfony/ux-cloudflare-image' }
-    ]
-  },
-  {
-    name: 'UX Cloudinary Image',
-    packages: [
-      { registry: 'packagist', name: 'symfony/ux-cloudinary-image', repo: 'symfony/ux-cloudinary-image' }
-    ]
-  },
-  {
-    name: 'UX Imgix Image',
-    packages: [
-      { registry: 'packagist', name: 'symfony/ux-imgix-image', repo: 'symfony/ux-imgix-image' }
-    ]
-  },
-  {
-    name: 'UX KeyCDN Image',
-    packages: [
-      { registry: 'packagist', name: 'symfony/ux-keycdn-image', repo: 'symfony/ux-keycdn-image' }
+    ],
+    bridges: [
+      {
+        name: 'Leaflet',
+        packages: [
+          { registry: 'packagist', name: 'symfony/ux-leaflet-map', repo: 'symfony/ux-leaflet-map' },
+          { registry: 'npm', name: '@symfony/ux-leaflet-map', repo: 'symfony/ux-leaflet-map' }
+        ]
+      },
+      {
+        name: 'Google Maps',
+        packages: [
+          { registry: 'packagist', name: 'symfony/ux-google-map', repo: 'symfony/ux-google-map' },
+          { registry: 'npm', name: '@symfony/ux-google-map', repo: 'symfony/ux-google-map' }
+        ]
+      }
     ]
   },
   {
     name: 'UX Image',
     packages: [
       { registry: 'packagist', name: 'symfony/ux-image', repo: 'symfony/ux-image' }
+    ],
+    bridges: [
+      {
+        name: 'Cloudflare',
+        packages: [
+          { registry: 'packagist', name: 'symfony/ux-cloudflare-image', repo: 'symfony/ux-cloudflare-image' }
+        ]
+      },
+      {
+        name: 'Cloudinary',
+        packages: [
+          { registry: 'packagist', name: 'symfony/ux-cloudinary-image', repo: 'symfony/ux-cloudinary-image' }
+        ]
+      },
+      {
+        name: 'Imgix',
+        packages: [
+          { registry: 'packagist', name: 'symfony/ux-imgix-image', repo: 'symfony/ux-imgix-image' }
+        ]
+      },
+      {
+        name: 'KeyCDN',
+        packages: [
+          { registry: 'packagist', name: 'symfony/ux-keycdn-image', repo: 'symfony/ux-keycdn-image' }
+        ]
+      }
     ]
   },
   {

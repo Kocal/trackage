@@ -1,5 +1,5 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { projects } from '../app/data/projects.config'
+import { allPackages, projects } from '../app/data/projects.config'
 import { fetchStars } from './lib/github'
 import { dailyMap, fetchNpmDays } from './lib/npm'
 import { fetchPackagistDaily, fetchPackagistTotal } from './lib/packagist'
@@ -32,7 +32,7 @@ async function main() {
     const slug = projectSlug(project.name)
     const filePath = new URL(`../data/history/${slug}.json`, import.meta.url)
     const history = await loadHistory(filePath)
-    for (const pkg of project.packages) {
+    for (const pkg of allPackages(project)) {
       const key = packageKey(pkg.registry, pkg.name)
       try {
         const stars = await fetchStars(pkg.repo, token).catch(() => history.packages[key]?.stars ?? 0)
