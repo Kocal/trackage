@@ -81,6 +81,43 @@ export const projects: TrackedProject[] = [
     ]
   },
   {
+    name: 'UX Cloudflare Image',
+    packages: [
+      { registry: 'packagist', name: 'symfony/ux-cloudflare-image', repo: 'symfony/ux-cloudflare-image' }
+    ]
+  },
+  {
+    name: 'UX Cloudinary Image',
+    packages: [
+      { registry: 'packagist', name: 'symfony/ux-cloudinary-image', repo: 'symfony/ux-cloudinary-image' }
+    ]
+  },
+  {
+    name: 'UX Imgix Image',
+    packages: [
+      { registry: 'packagist', name: 'symfony/ux-imgix-image', repo: 'symfony/ux-imgix-image' }
+    ]
+  },
+  {
+    name: 'UX KeyCDN Image',
+    packages: [
+      { registry: 'packagist', name: 'symfony/ux-keycdn-image', repo: 'symfony/ux-keycdn-image' }
+    ]
+  },
+  {
+    name: 'UX Image',
+    packages: [
+      { registry: 'packagist', name: 'symfony/ux-image', repo: 'symfony/ux-image' }
+    ]
+  },
+  {
+    name: 'UX Router',
+    packages: [
+      { registry: 'packagist', name: 'symfony/ux-router', repo: 'symfony/ux-router' },
+      { registry: 'npm', name: '@symfony/ux-router', repo: 'symfony/ux-router' }
+    ]
+  },
+  {
     name: 'UX Calendar Link',
     packages: [
       { registry: 'packagist', name: 'symfony/ux-calendar-link', repo: 'symfony/ux-calendar-link' }

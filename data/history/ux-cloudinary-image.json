@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-10-18T14:38:26.353Z",
+  "packages": {
+    "packagist:symfony/ux-cloudinary-image": {
+      "total": 62,
+      "stars": 0,
+      "daily": {
+        "2026-10-12": 18,
+        "2026-10-13": 9,
+        "2026-10-14": 10,
+        "2026-10-16": 9
+      }
+    }
+  }
+}
