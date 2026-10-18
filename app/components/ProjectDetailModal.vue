@@ -50,10 +50,13 @@ const dataset = computed(() => {
   return d.packages.map(p => ({
     name: `${p.registry} · ${p.name}`,
     type: 'line' as const,
-    color: p.registry === 'npm' ? '#00DC82' : '#F28D1A',
+    color: p.color,
+    dashed: p.dashed,
     series: p.chartSeries
   }))
 })
+
+const isFamily = computed(() => (props.project?.bridges.length ?? 0) > 0)
 
 watch([open, () => dataset.value.length], ([isOpen, count]) => {
   if (import.meta.client && isOpen && count > 0 && !chartReady.value) {
@@ -139,7 +142,14 @@ function tooltipName(name: string) {
       >
         <div class="flex flex-wrap items-baseline gap-2">
           <span class="text-2xl font-bold tabular-nums">{{ nf.format(detail.combinedTotal) }}</span>
-          <span class="text-sm text-muted">total downloads · {{ nf.format(detail.totalStars) }} stars</span>
+          <span
+            v-if="isFamily"
+            class="text-sm text-muted"
+          >installs<template v-if="detail.bridgesNpmTotal > 0"> · + {{ nf.format(detail.bridgesNpmTotal) }} npm downloads</template> · {{ nf.format(detail.totalStars) }} stars</span>
+          <span
+            v-else
+            class="text-sm text-muted"
+          >total downloads · {{ nf.format(detail.totalStars) }} stars</span>
         </div>
 
         <ClientOnly>
@@ -218,6 +228,13 @@ function tooltipName(name: string) {
             class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-default p-3 text-sm"
           >
             <div class="flex min-w-0 items-center gap-2">
+              <template v-if="isFamily">
+                <span
+                  class="size-2 shrink-0 rounded-full"
+                  :style="{ backgroundColor: pkg.color }"
+                />
+                <span class="shrink-0 text-xs font-medium">{{ pkg.bridge ?? project?.name }}</span>
+              </template>
               <UIcon :name="registryIcon(pkg.registry)" />
               <span class="truncate font-mono text-xs">{{ pkg.name }}</span>
             </div>
