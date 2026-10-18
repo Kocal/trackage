@@ -8,9 +8,13 @@ const props = withDefaults(defineProps<{
   values: number[]
   width?: number
   height?: number
+  color?: string
+  tooltip?: boolean
 }>(), {
   width: 140,
-  height: 36
+  height: 36,
+  color: undefined,
+  tooltip: true
 })
 
 const hover = useSparklineHover()
@@ -98,6 +102,7 @@ function onLeave() {
       :height="height"
       :viewBox="`0 0 ${width} ${height}`"
       class="text-primary overflow-visible"
+      :style="color ? { color } : undefined"
       preserveAspectRatio="none"
       @pointermove="onMove"
       @pointerleave="onLeave"
@@ -133,7 +138,7 @@ function onLeave() {
     </svg>
     <Teleport to="body">
       <div
-        v-if="tooltipStyle && active"
+        v-if="tooltip && tooltipStyle && active"
         class="pointer-events-none fixed z-50 -translate-x-1/2 whitespace-nowrap rounded-md bg-inverted px-1.5 py-0.5 text-xs text-inverted shadow-lg"
         :style="{ ...tooltipStyle, transform: 'translate(-50%, calc(-100% - 6px))' }"
       >
