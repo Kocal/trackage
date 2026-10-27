@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-26T06:41:09.035Z",
+  "generatedAt": "2026-10-27T04:13:10.168Z",
   "packages": {
     "packagist:symfony/ux-image": {
-      "total": 279,
+      "total": 292,
       "stars": 1,
       "daily": {
         "2026-09-28": 1,
@@ -19,7 +19,8 @@
         "2026-10-21": 25,
         "2026-10-22": 11,
         "2026-10-23": 28,
-        "2026-10-24": 18
+        "2026-10-24": 18,
+        "2026-10-25": 4
       }
     },
     "packagist:symfony/ux-cloudflare-image": {
@@ -32,7 +33,7 @@
       }
     },
     "packagist:symfony/ux-cloudinary-image": {
-      "total": 104,
+      "total": 111,
       "stars": 0,
       "daily": {
         "2026-10-12": 18,
@@ -43,7 +44,8 @@
         "2026-10-18": 34,
         "2026-10-19": 1,
         "2026-10-21": 1,
-        "2026-10-24": 18
+        "2026-10-24": 18,
+        "2026-10-25": 3
       }
     },
     "packagist:symfony/ux-imgix-image": {
