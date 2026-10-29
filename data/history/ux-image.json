@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-28T04:11:22.919Z",
+  "generatedAt": "2026-10-29T04:10:56.985Z",
   "packages": {
     "packagist:symfony/ux-image": {
-      "total": 308,
+      "total": 320,
       "stars": 1,
       "daily": {
         "2026-09-28": 1,
@@ -21,7 +21,8 @@
         "2026-10-23": 28,
         "2026-10-24": 18,
         "2026-10-25": 4,
-        "2026-10-26": 13
+        "2026-10-26": 13,
+        "2026-10-27": 16
       }
     },
     "packagist:symfony/ux-cloudflare-image": {
