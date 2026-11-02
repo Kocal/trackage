@@ -138,6 +138,12 @@ export const projects: TrackedProject[] = [
     ]
   },
   {
+    name: 'UX CSS',
+    packages: [
+      { registry: 'packagist', name: 'symfony/ux-css', repo: 'symfony/ux-css' }
+    ]
+  },
+  {
     name: 'PHPStan Symfony UX',
     packages: [
       { registry: 'packagist', name: 'kocal/phpstan-symfony-ux', repo: 'Kocal/phpstan-symfony-ux' }
