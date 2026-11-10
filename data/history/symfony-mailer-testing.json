@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-09T04:10:12.489Z",
+  "generatedAt": "2026-11-10T04:08:54.040Z",
   "packages": {
     "packagist:kocal/symfony-mailer-testing": {
-      "total": 273185,
+      "total": 273202,
       "stars": 15,
       "daily": {
         "2020-05-18": 18,
