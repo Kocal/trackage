@@ -7,7 +7,7 @@ export const REGISTRY_COLORS: Record<Registry, string> = {
   packagist: '#F28D1A'
 }
 
-const BRIDGE_PALETTE = ['#3b82f6', '#f59e0b', '#a855f7', '#ec4899']
+const BRIDGE_PALETTE = ['#3b82f6', '#f59e0b', '#a855f7', '#ec4899', '#06b6d4']
 
 export function bridgeColor(index: number): string {
   return BRIDGE_PALETTE[index % BRIDGE_PALETTE.length] as string
