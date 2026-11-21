@@ -111,6 +111,12 @@ export const projects: TrackedProject[] = [
         ]
       },
       {
+        name: 'Imagor',
+        packages: [
+          { registry: 'packagist', name: 'symfony/ux-imagor-image', repo: 'symfony/ux-imagor-image' }
+        ]
+      },
+      {
         name: 'Imgix',
         packages: [
           { registry: 'packagist', name: 'symfony/ux-imgix-image', repo: 'symfony/ux-imgix-image' }

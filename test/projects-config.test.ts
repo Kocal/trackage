@@ -34,7 +34,7 @@ describe('projects config', () => {
   it('nests the map and image bridges under their core', () => {
     const byName = (name: string) => projects.find(p => p.name === name)
     expect(byName('UX Map')?.bridges?.map(b => b.name)).toEqual(['Leaflet', 'Google Maps'])
-    expect(byName('UX Image')?.bridges?.map(b => b.name)).toEqual(['Cloudflare', 'Cloudinary', 'Imgix', 'KeyCDN'])
+    expect(byName('UX Image')?.bridges?.map(b => b.name)).toEqual(['Cloudflare', 'Cloudinary', 'Imagor', 'Imgix', 'KeyCDN'])
     for (const gone of ['UX Leaflet Map', 'UX Google Map', 'UX Cloudflare Image', 'UX Cloudinary Image', 'UX Imgix Image', 'UX KeyCDN Image']) {
       expect(byName(gone)).toBeUndefined()
     }
